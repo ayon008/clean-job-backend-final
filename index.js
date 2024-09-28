@@ -35,6 +35,23 @@ const opportunities = database.collection('opportunities');
 const leadList = database.collection('lead-list');
 const emailTemplate = database.collection('email-template');
 
+
+
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization'].split(' ')[1];
+    if (!token) {
+        return res.status(403).send({ message: 'Token is required' });
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Token is invalid' });
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
+
 async function run() {
     try {
 
@@ -47,12 +64,14 @@ async function run() {
 
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
+            const userData = await userCollection.findOne({ email: email });
             const token = jwt.sign({
-                data: email
+                data: email,
+                isAdmin: userData?.isAdmin,
+                isSeller: userData?.isSeller
             }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
             res.send({ token })
         })
-
 
         app.post('/leadList', async (req, res) => {
             const data = req.body;
@@ -93,7 +112,7 @@ async function run() {
             const result = await Promise.all(
                 data.map(async (lead) => {
                     const emailTemplateId = lead.emailTemplate;
-                    const emailTemplateData = await emailTemplate.findOne({ _id: new ObjectId(emailTemplateId) },{ projection: { _id: 0 } });
+                    const emailTemplateData = await emailTemplate.findOne({ _id: new ObjectId(emailTemplateId) }, { projection: { _id: 0 } });
                     return {
                         ...lead,
                         emailTemplateData, // Add the fetched email template data to the lead object
@@ -104,7 +123,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/search/:leadName', async (req, res) => {
+        app.get('/search/:leadName', verifyToken, async (req, res) => {
             const leadName = req.params.leadName;
             const option = {
                 projection: {
