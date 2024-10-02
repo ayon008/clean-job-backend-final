@@ -33,11 +33,11 @@ const exclusiveLeads = database.collection('exclusive-leads');
 const layUps = database.collection('lay-ups');
 const opportunities = database.collection('opportunities');
 const leadList = database.collection('lead-list');
-const emailTemplate = database.collection('email-template');
 
 async function run() {
     try {
 
+        // Post user to database
         app.post('/user', async (req, res) => {
             const data = req.body;
             const result = await userCollection.insertOne(data);
@@ -45,6 +45,7 @@ async function run() {
             res.send(result);
         })
 
+        // post user email to get hwt token
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
             const token = jwt.sign({
@@ -53,56 +54,37 @@ async function run() {
             res.send({ token })
         })
 
-
+        // Post leadList to database
         app.post('/leadList', async (req, res) => {
             const data = req.body;
             const result = await leadList.insertOne(data);
             res.send(result)
         })
 
-        app.post('/email-template', async (req, res) => {
-            const data = req.body;
-            const result = await emailTemplate.insertOne(data);
-            res.send(result);
-        })
-
-
+        // Delete lead list from database
         app.delete('/leadList/:id', async (req, res) => {
             const id = req.params.id;
+            console.log(id);
             const query = { _id: new ObjectId(id) };
             const result = await leadList.deleteOne(query);
             res.send(result);
         })
 
-        app.delete('/email-template/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await emailTemplate.deleteOne(query);
-            res.send(result);
-        })
 
         app.get('/user', async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         })
 
-        app.get('/leadList/:uid', async (req, res) => {
-            const uid = req.params.uid;
-            const query = { uid: { $eq: uid } };
-            const data = await leadList.find(query).toArray();
-            const result = await Promise.all(
-                data.map(async (lead) => {
-                    const emailTemplateId = lead.emailTemplate;
-                    const emailTemplateData = await emailTemplate.findOne({ _id: new ObjectId(emailTemplateId) },{ projection: { _id: 0 } });
-                    return {
-                        ...lead,
-                        emailTemplateData, // Add the fetched email template data to the lead object
-                    };
-                })
-            );
-            console.log(result);
-            res.send(result);
+        // get single User
+        app.get('/user/:uid', async (req, res) => {
+            const userId = req.params.uid;
+            const query = { userId: { $eq: userId } };
+            const data = await userCollection.findOne(query);
+            console.log(data);
+            res.send(data);
         })
+
 
         app.get('/search/:leadName', async (req, res) => {
             const leadName = req.params.leadName;
@@ -169,36 +151,37 @@ async function run() {
             res.send(data)
         })
 
-        app.get('/email-template/:uid', async (req, res) => {
-            const uid = req.params.uid;
-            const query = { uid: { $eq: uid } }
-            const data = await emailTemplate.find(query).toArray();
-            res.send(data)
-        })
-
-        app.get('/email-template/:uid/:id', async (req, res) => {
-            const uid = req.params.uid;
+        app.patch('/user/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { $and: [{ uid: { $eq: uid } }, { _id: new ObjectId(id) }] }
-            const data = await emailTemplate.findOne(query);
-            res.send(data)
-        })
-
-        app.put('/email-template/:id', async function (req, res) {
-            const id = req.params.id;
-            const data = req.body;
             const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const userInfo = req.body;
             const updatedData = {
                 $set: {
-                    templateName: data.templateName,
-                    subject: data.subject,
-                    body: data.body,
-                    emailSignature: data.emailSignature,
-                    websiteLink: data.websiteLink,
-                    file: data.file,
+                    companyName: userInfo?.companyName,
+                    email: userInfo?.email,
+                    companyWebsite: userInfo?.companyWebsite,
+                    serviceState: userInfo?.serviceState,
+                    serviceState1: userInfo?.serviceState1,
+                    serviceState2: userInfo?.serviceState2,
+                    serviceState3: userInfo?.serviceState3,
+                    socialMedia: userInfo?.socialMedia,
+                    socialMedia1: userInfo?.socialMedia1,
+                    socialMedia2: userInfo?.socialMedia2,
+                    socialMedia3: userInfo?.socialMedia3,
+                    serviceCities: userInfo?.serviceCities,
+                    serviceCities1: userInfo?.serviceCities1,
+                    serviceCities2: userInfo?.serviceCities2,
+                    serviceCities3: userInfo?.serviceCities3,
+                    yearsInBusiness: userInfo?.yearsInBusiness,
+                    employeeAmount: userInfo?.employeeAmount,
+                    mainContact: userInfo?.mainContact,
+                    phoneNumber: userInfo?.phoneNumber,
+                    file: userInfo?.file,
+                    companyDetails: userInfo?.companyDetails,
                 }
             }
-            const result = await emailTemplate.updateOne(query, updatedData);
+            const result = await userCollection.updateOne(query, updatedData, options);
             res.send(result);
         })
 
@@ -212,11 +195,7 @@ async function run() {
     }
 }
 
-
-
 run().catch(console.dir);
-
-
 
 app.listen(port, () => {
     console.log(port);
