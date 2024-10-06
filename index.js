@@ -34,11 +34,13 @@ const layUps = database.collection('lay-ups');
 const opportunities = database.collection('opportunities');
 const leadList = database.collection('lead-list');
 const emailTemplate = database.collection('email-template');
+const subscribedEmail = database.collection('subscribe-email');
 
 
 
 const verifyToken = (req, res, next) => {
-    const token = req.headers['authorization'].split(' ')[1];
+    const token = req.headers['authorization']?.split(' ')[1];
+    console.log(token);
     if (!token) {
         return res.status(403).send({ message: 'Token is required' });
     }
@@ -62,15 +64,69 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/user', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
             const userData = await userCollection.findOne({ email: email });
             const token = jwt.sign({
-                data: email,
+                email: email,
                 isAdmin: userData?.isAdmin,
                 isSeller: userData?.isSeller
             }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
             res.send({ token })
+        })
+
+        app.get('/user/:uid', verifyToken, async (req, res) => {
+            const uid = req.params.uid;
+            const find = await userCollection.findOne({ userId: { $eq: uid } })
+            console.log(find?.email, req.decoded.email);
+            if (find?.email !== req.decoded.email) {
+                return res.status(404).send({ error: true, message: 'unauthorized access' })
+            }
+            else if (find?.email === req.decoded.email) {
+                return res.send(find);
+            }
+        })
+
+        app.patch('/user/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const userInfo = req.body;
+            console.log(userInfo);
+
+            const find = await userCollection.findOne({ _id: new ObjectId(id) });
+            if (find?.email !== req.decoded.email) {
+                return res.status(404).send({ error: true, message: 'unauthorized access' })
+            }
+            const updatedData = {
+                $set: {
+                    companyName: userInfo?.companyName,
+                    email: userInfo?.email,
+                    companyWebsite: userInfo?.companyWebsite,
+                    serviceState: userInfo?.serviceState,
+                    serviceCity1: userInfo?.serviceCity1,
+                    serviceCity2: userInfo?.serviceCity2,
+                    serviceCity3: userInfo?.serviceCity3,
+                    serviceCity4: userInfo?.serviceCity4,
+                    yearsInBusiness: userInfo?.yearsInBusiness,
+                    numberOfEmployees: userInfo?.numberOfEmployees,
+                    mainContact: userInfo?.mainContact,
+                    phoneNumber: userInfo?.phoneNumber,
+                    socialMedia1: userInfo?.socialMedia1,
+                    socialMedia2: userInfo?.socialMedia2,
+                    socialMedia3: userInfo?.socialMedia3,
+                    socialMedia4: userInfo?.socialMedia4,
+                    companyDetails: userInfo?.companyDetails,
+                    companyLogo: userInfo?.companyLogo,
+                },
+            }
+            const option = { upsert: true }
+            const result = await userCollection.updateOne({ _id: new ObjectId(id) }, updatedData, option)
+            console.log(result);
+            res.send(result);
         })
 
         app.post('/leadList', async (req, res) => {
@@ -145,8 +201,15 @@ async function run() {
             if (leadName === 'opportunities') {
                 collection = opportunities;
             }
-            const data = await collection.find({}, option).toArray();
-            res.send(data)
+
+            const email = req.decoded.email;
+            const user = await userCollection.findOne({ email: email });
+
+            if (user) {
+                const data = await collection.find({}, option).toArray();
+                res.send(data)
+            }
+            res.status(403).send({ error: true, message: 'unauthorized access' });
         })
 
         app.get('/search/:leadName/:state', async function (req, res) {
@@ -221,6 +284,11 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/subscribedEmail', async (req, res) => {
+            const data = req.body;
+            const result = await subscribedEmail.insertOne(data);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
