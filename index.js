@@ -35,6 +35,7 @@ const opportunities = database.collection('opportunities');
 const leadList = database.collection('lead-list');
 const emailTemplate = database.collection('email-template');
 const subscribedEmail = database.collection('subscribe-email');
+const leads = database.collection('leads');
 
 
 
@@ -52,6 +53,30 @@ const verifyToken = (req, res, next) => {
         next();
     })
 }
+
+const verifyAdmin = async (req, res, next) => {
+    try {
+        // Ensure the decoded token contains the email
+        const email = req.decoded?.email;
+        if (!email) {
+            return res.status(401).json({ message: 'Unauthorized: No email found in token' });
+        }
+
+        // Query the database to find the user
+        const user = await userCollection.findOne({ email });
+
+        // If user is not found or is not an admin
+        if (!user || !user.isAdmin) {
+            return res.status(403).json({ message: 'Forbidden: You do not have admin privileges' });
+        }
+        // Proceed to the next middleware or route
+        next();
+    } catch (error) {
+        // Handle any unexpected errors
+        return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+};
+
 
 
 async function run() {
@@ -179,56 +204,57 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/search/:leadName', verifyToken, async (req, res) => {
+        // app.get('/search/:leadName', verifyToken, async (req, res) => {
+        //     const leadName = req.params.leadName;
+        //     const option = {
+        //         projection: {
+        //             job_details: {
+        //                 location: {
+        //                     state: 1
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     let collection;
+        //     console.log(leadName);
+        //     if (leadName === 'exclusive-leads') {
+        //         collection = exclusiveLeads;
+        //     }
+        //     if (leadName === 'layups') {
+        //         collection = layUps;
+        //     }
+        //     if (leadName === 'opportunities') {
+        //         collection = opportunities;
+        //     }
+
+        //     const email = req.decoded.email;
+        //     const user = await userCollection.findOne({ email: email });
+
+        //     if (user) {
+        //         const data = await collection.find({}, option).toArray();
+        //         res.send(data)
+        //     }
+        //     res.status(403).send({ error: true, message: 'unauthorized access' });
+        // })
+
+        app.get('/search/:leadName', async (req, res) => {
             const leadName = req.params.leadName;
             const option = {
                 projection: {
-                    job_details: {
-                        location: {
-                            state: 1
-                        }
-                    }
+                    states: 1
                 }
             }
-            let collection;
-            console.log(leadName);
-            if (leadName === 'exclusive-leads') {
-                collection = exclusiveLeads;
-            }
-            if (leadName === 'layups') {
-                collection = layUps;
-            }
-            if (leadName === 'opportunities') {
-                collection = opportunities;
-            }
-
-            const email = req.decoded.email;
-            const user = await userCollection.findOne({ email: email });
-
-            if (user) {
-                const data = await collection.find({}, option).toArray();
-                res.send(data)
-            }
-            res.status(403).send({ error: true, message: 'unauthorized access' });
+            const query = { category: leadName }
+            const result = await leads.find(query, option).toArray();
+            res.send(result)
         })
 
         app.get('/search/:leadName/:state', async function (req, res) {
             const leadName = req.params.leadName;
             const state = req.params.state;
-            console.log(leadName, state);
-            let collection;
-            const query = { "job_details.location.state": { $eq: state } }
-            if (leadName === 'exclusive-leads') {
-                collection = exclusiveLeads;
-            }
-            if (leadName === 'layups') {
-                collection = layUps;
-            }
-            if (leadName === 'opportunities') {
-                collection = opportunities;
-            }
-            const data = await collection.find(query).toArray();
-            res.send(data)
+            const query = { $and: [{ category: leadName }, { states: state }] }
+            const result = await leads.find(query).toArray();
+            res.send(result)
         })
 
         app.get('/search/:leadName/:state/:id', async function (req, res) {
@@ -288,6 +314,64 @@ async function run() {
             const data = req.body;
             const result = await subscribedEmail.insertOne(data);
             res.send(result);
+        })
+
+        app.post('/leads', verifyToken, verifyAdmin, async (req, res) => {
+            const data = req.body;
+            const result = await leads.insertOne(data);
+            res.send(result);
+        })
+
+        app.patch('/makeAdmin/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const data = req.body.isAdmin
+            console.log(data, id);
+
+            const query = { _id: new ObjectId(id) };
+            const updatedData = { $set: { isAdmin: data } }
+            const result = await userCollection.updateOne(query, updatedData, { upsert: true });
+            res.send(result);
+        })
+        app.patch('/makeSeller/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const data = req.body.isSeller
+            console.log(data, id);
+            const query = { _id: new ObjectId(id) };
+            const updatedData = { $set: { isSeller: data } }
+            const result = await userCollection.updateOne(query, updatedData, { upsert: true });
+            res.send(result);
+        })
+
+        app.get('/allLeads', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await leads.find().toArray();
+            res.send(result);
+        })
+
+        app.patch('/allLeads/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updatedData = {
+                $set: {
+                    verified: req.body.verified
+                }
+            }
+            const result = await leads.updateOne(query, updatedData, { upsert: true });
+            res.send(result);
+        })
+
+
+        app.patch('/category/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updatedData = {
+                $set: {
+                    category: req.body.category
+                }
+            }
+            const result = await leads.updateOne(query, updatedData, { upsert: true });
+            res.send(result);
+            console.log(result);
+
         })
 
         // Send a ping to confirm a successful connection
