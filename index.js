@@ -204,38 +204,6 @@ async function run() {
             res.send(result);
         })
 
-        // app.get('/search/:leadName', verifyToken, async (req, res) => {
-        //     const leadName = req.params.leadName;
-        //     const option = {
-        //         projection: {
-        //             job_details: {
-        //                 location: {
-        //                     state: 1
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     let collection;
-        //     console.log(leadName);
-        //     if (leadName === 'exclusive-leads') {
-        //         collection = exclusiveLeads;
-        //     }
-        //     if (leadName === 'layups') {
-        //         collection = layUps;
-        //     }
-        //     if (leadName === 'opportunities') {
-        //         collection = opportunities;
-        //     }
-
-        //     const email = req.decoded.email;
-        //     const user = await userCollection.findOne({ email: email });
-
-        //     if (user) {
-        //         const data = await collection.find({}, option).toArray();
-        //         res.send(data)
-        //     }
-        //     res.status(403).send({ error: true, message: 'unauthorized access' });
-        // })
 
         app.get('/search/:leadName', async (req, res) => {
             const leadName = req.params.leadName;
