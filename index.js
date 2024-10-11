@@ -36,7 +36,7 @@ const leadList = database.collection('lead-list');
 const emailTemplate = database.collection('email-template');
 const subscribedEmail = database.collection('subscribe-email');
 const leads = database.collection('leads');
-
+const bookmarks = database.collection('bookmarks');
 
 
 const verifyToken = (req, res, next) => {
@@ -212,7 +212,7 @@ async function run() {
                     states: 1
                 }
             }
-            const query = { category: leadName }
+            const query = { $and: [{ category: leadName }, { verified: true }] }
             const result = await leads.find(query, option).toArray();
             res.send(result)
         })
@@ -220,28 +220,20 @@ async function run() {
         app.get('/search/:leadName/:state', async function (req, res) {
             const leadName = req.params.leadName;
             const state = req.params.state;
-            const query = { $and: [{ category: leadName }, { states: state }] }
+            const decodeState = decodeURIComponent(state);
+            console.log(decodeState);
+            const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
             const result = await leads.find(query).toArray();
             res.send(result)
         })
 
         app.get('/search/:leadName/:state/:id', async function (req, res) {
             const leadName = req.params.leadName;
-            const state = req.params.state;
+            const states = req.params.state;
             const id = req.params.id;
-            console.log(leadName, state, id);
-            let collection;
-            if (leadName === 'exclusive-leads') {
-                collection = exclusiveLeads;
-            }
-            if (leadName === 'layups') {
-                collection = layUps;
-            }
-            if (leadName === 'opportunities') {
-                collection = opportunities;
-            }
-            const query = { $and: [{ "job_details.location.state": { $eq: state } }, { _id: new ObjectId(id) }] }
-            const data = await collection.findOne(query);
+            console.log(leadName, states, id);
+            const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
+            const data = await leads.findOne(query);
             res.send(data)
         })
 
@@ -340,6 +332,56 @@ async function run() {
             res.send(result);
             console.log(result);
 
+        })
+
+        app.patch('/prize/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            console.log(req.body.prize);
+            const updatedData = {
+                $set: {
+                    prize: req.body.prize
+                }
+            }
+            const result = await leads.updateOne(query, updatedData, { upsert: true });
+            console.log(result);
+            res.send(result);
+        })
+
+        app.delete('/lead/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const deleteOne = await leads.deleteOne({ _id: new ObjectId(id) })
+            res.send(deleteOne);
+        })
+
+        app.post('/bookmarks', verifyToken, async (req, res) => {
+            const data = req.body;
+            const result = await bookmarks.insertOne(data);
+            res.send(result);
+        })
+
+        app.get('/bookMarks/:uid/:id', async (req, res) => {
+            const uid = req.params.uid;
+            const id = req.params.id;
+            console.log(uid, id);
+
+            const query = { $and: [{ userId: uid }, { id: id }] }
+            const find = await bookmarks.findOne(query);
+            if (find) {
+                res.send({ status: true })
+                return
+            }
+            res.send({ status: false })
+        })
+
+        app.delete('/bookMarks/:uid/:id', async (req, res) => {
+            const uid = req.params.uid;
+            const id = req.params.id;
+            console.log(uid, id);
+            const query = { $and: [{ userId: uid }, { id: id }] }
+            const find = await bookmarks.deleteOne(query);
+            console.log(find);
+            res.send(find);
         })
 
         // Send a ping to confirm a successful connection
