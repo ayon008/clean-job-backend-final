@@ -383,11 +383,14 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/bookMarks/:uid/:id', async (req, res) => {
+        app.get('/bookMarks/:uid/:id', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const id = req.params.id;
             console.log(uid, id);
-
+            const findUser = await userCollection.findOne({ userId: uid });
+            if (findUser?.email !== req.decoded.email) {
+                return res.status(401).send({ message: 'Unauthorized' });
+            }
             const query = { $and: [{ userId: uid }, { id: id }] }
             const find = await bookmarks.findOne(query);
             if (find) {
@@ -397,10 +400,14 @@ async function run() {
             res.send({ status: false })
         })
 
-        app.delete('/bookMarks/:uid/:id', async (req, res) => {
+        app.delete('/bookMarks/:uid/:id', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const id = req.params.id;
             console.log(uid, id);
+            const findUser = await userCollection.findOne({ userId: uid });
+            if (findUser.email !== req.decoded.email) {
+                return res.status(401).send({ message: 'Unauthorized' });
+            }
             const query = { $and: [{ userId: uid }, { id: id }] }
             const find = await bookmarks.deleteOne(query);
             console.log(find);
@@ -465,6 +472,57 @@ async function run() {
             const result = await message.find().toArray();
             res.send(result);
         })
+
+        app.get('/singleLeads/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const data = await leads.findOne({ _id: new ObjectId(id) });
+            res.send(data);
+        })
+
+        app.patch('/leads/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const data = req.body; // Get the incoming data from the request body
+            console.log(data); // Log the data for debugging
+
+            const updatedData = {
+                $set: {
+                    leadName: data.leadName,
+                    businessName: data.businessName,
+                    time: data.time,
+                    states: data.states,
+                    city: data.city,
+                    location: data.location,
+                    firstName: data.firstName,
+                    area: data.area,
+                    lastName: data.lastName,
+                    phoneNumber: data.phoneNumber,
+                    opportunityType: data.opportunityType,
+                    type: data.type,
+                    scope: data.scope,
+                    frequency: data.frequency,
+                    cleaning: data.cleaning,
+                    category: data.category,
+                    additionalDetails: data.additionalDetails,
+                    date: data.date,
+                }
+            };
+
+            try {
+                const result = await leads.updateOne(
+                    { _id: new ObjectId(req.params.id) }, // Filter by the lead ID
+                    updatedData,
+                    { upsert: true } // Create a new document if no matching document is found
+                );
+
+                console.log(result); // Log the result of the update for debugging
+                res.status(200).send(result); // Send a success response
+            } catch (error) {
+                console.error(error); // Log any errors for debugging
+                res.status(500).send({ error: 'Failed to update lead. Please try again later.' }); // Send an error response
+            }
+        });
+
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
