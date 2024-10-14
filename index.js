@@ -29,14 +29,13 @@ const client = new MongoClient(uri, {
 
 const database = client.db('CleanJobs');
 const userCollection = database.collection('users');
-const exclusiveLeads = database.collection('exclusive-leads');
-const layUps = database.collection('lay-ups');
-const opportunities = database.collection('opportunities');
 const leadList = database.collection('lead-list');
 const emailTemplate = database.collection('email-template');
 const subscribedEmail = database.collection('subscribe-email');
 const leads = database.collection('leads');
 const bookmarks = database.collection('bookmarks');
+const contacts = database.collection('contacts');
+const message = database.collection('messages');
 
 
 const verifyToken = (req, res, next) => {
@@ -68,6 +67,30 @@ const verifyAdmin = async (req, res, next) => {
         // If user is not found or is not an admin
         if (!user || !user.isAdmin) {
             return res.status(403).json({ message: 'Forbidden: You do not have admin privileges' });
+        }
+        // Proceed to the next middleware or route
+        next();
+    } catch (error) {
+        // Handle any unexpected errors
+        return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+};
+
+
+const verifySeller = async (req, res, next) => {
+    try {
+        // Ensure the decoded token contains the email
+        const email = req.decoded?.email;
+        if (!email) {
+            return res.status(401).json({ message: 'Unauthorized: No email found in token' });
+        }
+
+        // Query the database to find the user
+        const user = await userCollection.findOne({ email });
+
+        // If user is not found or is not an admin
+        if (!user || !user.isSeller) {
+            return res.status(403).json({ message: 'Forbidden: You do not have seller privileges' });
         }
         // Proceed to the next middleware or route
         next();
@@ -382,6 +405,65 @@ async function run() {
             const find = await bookmarks.deleteOne(query);
             console.log(find);
             res.send(find);
+        })
+
+
+        app.get('/savedLeads/:uid', verifyToken, async (req, res) => {
+            const email = req.decoded.email;
+            const uid = req.params.uid;
+            const user = await userCollection.findOne({ userId: uid });
+            console.log(email, user?.email);
+            if (email !== user?.email) {
+                return res.status(401).send({ message: 'Unauthorized' });
+            }
+            const bookMarkedId = await bookmarks.find({ userId: uid }, { projection: { id: 1 } }).toArray();
+            const savedLeads = await Promise.all(
+                bookMarkedId.map(async (id) => {
+                    const find = await leads.findOne({ _id: new ObjectId(id?.id) });
+                    return find;
+                })
+            );
+            res.send(savedLeads);
+        })
+
+        app.get('/sellerLeads/:sellerId', verifyToken, verifySeller, async (req, res) => {
+            const sellerId = req.params.sellerId;
+            const query = { sellerId: sellerId }
+            const sellerLeads = await leads.find(query).toArray();
+            res.send(sellerLeads);
+        })
+
+        app.post('/contacts', async (req, res) => {
+            const data = req.body
+            const result = await contacts.insertOne(data);
+            res.send(result);
+        })
+
+        app.post('/message', async (req, res) => {
+            const data = req.body
+            const result = await message.insertOne(data);
+            res.send(result);
+        })
+
+        app.get('/allLeads/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const find = await leads.findOne({ _id: new ObjectId(id) });
+            res.send(find);
+        })
+
+        app.get('/subscribedEmail', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await subscribedEmail.find().toArray();
+            console.log(result);
+            res.send(result);
+        })
+
+        app.get('/contacts', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await contacts.find().toArray();
+            res.send(result);
+        })
+        app.get('/messages', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await message.find().toArray();
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
