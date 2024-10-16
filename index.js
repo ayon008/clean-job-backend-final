@@ -4,7 +4,7 @@ var jwt = require('jsonwebtoken');
 const app = express();
 const cors = require('cors');
 const port = 5000 || process.env.PORT;
-
+const stripe = require("stripe")('sk_test_51QAGCnDjsDu7deU5ljElPtIAnkxXysNY7y27MUmkh00cWkxS4zJM6MiQKq9aDN8CnoeL8bz2jZG03hGJLjJ1reqS00qisscKcz');
 
 app.use(express.json());
 app.use(cors());
@@ -519,6 +519,28 @@ async function run() {
                 console.error(error); // Log any errors for debugging
                 res.status(500).send({ error: 'Failed to update lead. Please try again later.' }); // Send an error response
             }
+        });
+
+        app.post("/create-payment-intent", async (req, res) => {
+            const { price } = req.body;
+            const customer = await stripe.customers.create();
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                customer: customer.id,
+                setup_future_usage: "off_session",
+                amount: price * 100,
+                currency: "usd",
+                // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+                // [DEV]: For demo purposes only, you should avoid exposing the PaymentIntent ID in the client-side code.
+                dpmCheckerLink: `https://dashboard.stripe.com/settings/payment_methods/review?transaction_id=${paymentIntent.id}`,
+            });
         });
 
 
