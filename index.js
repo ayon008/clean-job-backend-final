@@ -4,6 +4,7 @@ var jwt = require('jsonwebtoken');
 const app = express();
 const cors = require('cors');
 const port = 5000 || process.env.PORT;
+const endpointSecret = 'whsec_...';
 const stripe = require("stripe")('sk_test_51QAGCnDjsDu7deU5ljElPtIAnkxXysNY7y27MUmkh00cWkxS4zJM6MiQKq9aDN8CnoeL8bz2jZG03hGJLjJ1reqS00qisscKcz');
 
 app.use(express.json());
@@ -36,11 +37,11 @@ const leads = database.collection('leads');
 const bookmarks = database.collection('bookmarks');
 const contacts = database.collection('contacts');
 const message = database.collection('messages');
+const purchased = database.collection('purchased');
 
 
 const verifyToken = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
-    console.log(token);
     if (!token) {
         return res.status(403).send({ message: 'Token is required' });
     }
@@ -108,7 +109,6 @@ async function run() {
         app.post('/user', async (req, res) => {
             const data = req.body;
             const result = await userCollection.insertOne(data);
-            console.log(process.env.ACCESS_TOKEN);
             res.send(result);
         })
 
@@ -131,7 +131,6 @@ async function run() {
         app.get('/user/:uid', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const find = await userCollection.findOne({ userId: { $eq: uid } })
-            console.log(find?.email, req.decoded.email);
             if (find?.email !== req.decoded.email) {
                 return res.status(404).send({ error: true, message: 'unauthorized access' })
             }
@@ -143,8 +142,6 @@ async function run() {
         app.patch('/user/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const userInfo = req.body;
-            console.log(userInfo);
-
             const find = await userCollection.findOne({ _id: new ObjectId(id) });
             if (find?.email !== req.decoded.email) {
                 return res.status(404).send({ error: true, message: 'unauthorized access' })
@@ -173,7 +170,6 @@ async function run() {
             }
             const option = { upsert: true }
             const result = await userCollection.updateOne({ _id: new ObjectId(id) }, updatedData, option)
-            console.log(result);
             res.send(result);
         })
 
@@ -223,7 +219,6 @@ async function run() {
                     };
                 })
             );
-            console.log(result);
             res.send(result);
         })
 
@@ -244,7 +239,6 @@ async function run() {
             const leadName = req.params.leadName;
             const state = req.params.state;
             const decodeState = decodeURIComponent(state);
-            console.log(decodeState);
             const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
             const result = await leads.find(query).toArray();
             res.send(result)
@@ -254,7 +248,6 @@ async function run() {
             const leadName = req.params.leadName;
             const states = req.params.state;
             const id = req.params.id;
-            console.log(leadName, states, id);
             const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
             const data = await leads.findOne(query);
             res.send(data)
@@ -307,9 +300,7 @@ async function run() {
 
         app.patch('/makeAdmin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
-            const data = req.body.isAdmin
-            console.log(data, id);
-
+            const data = req.body.isAdmin;
             const query = { _id: new ObjectId(id) };
             const updatedData = { $set: { isAdmin: data } }
             const result = await userCollection.updateOne(query, updatedData, { upsert: true });
@@ -317,8 +308,7 @@ async function run() {
         })
         app.patch('/makeSeller/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
-            const data = req.body.isSeller
-            console.log(data, id);
+            const data = req.body.isSeller;
             const query = { _id: new ObjectId(id) };
             const updatedData = { $set: { isSeller: data } }
             const result = await userCollection.updateOne(query, updatedData, { upsert: true });
@@ -353,21 +343,17 @@ async function run() {
             }
             const result = await leads.updateOne(query, updatedData, { upsert: true });
             res.send(result);
-            console.log(result);
-
         })
 
         app.patch('/prize/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            console.log(req.body.prize);
             const updatedData = {
                 $set: {
                     prize: req.body.prize
                 }
             }
             const result = await leads.updateOne(query, updatedData, { upsert: true });
-            console.log(result);
             res.send(result);
         })
 
@@ -386,7 +372,6 @@ async function run() {
         app.get('/bookMarks/:uid/:id', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const id = req.params.id;
-            console.log(uid, id);
             const findUser = await userCollection.findOne({ userId: uid });
             if (findUser?.email !== req.decoded.email) {
                 return res.status(401).send({ message: 'Unauthorized' });
@@ -403,14 +388,12 @@ async function run() {
         app.delete('/bookMarks/:uid/:id', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const id = req.params.id;
-            console.log(uid, id);
             const findUser = await userCollection.findOne({ userId: uid });
             if (findUser.email !== req.decoded.email) {
                 return res.status(401).send({ message: 'Unauthorized' });
             }
             const query = { $and: [{ userId: uid }, { id: id }] }
             const find = await bookmarks.deleteOne(query);
-            console.log(find);
             res.send(find);
         })
 
@@ -419,7 +402,6 @@ async function run() {
             const email = req.decoded.email;
             const uid = req.params.uid;
             const user = await userCollection.findOne({ userId: uid });
-            console.log(email, user?.email);
             if (email !== user?.email) {
                 return res.status(401).send({ message: 'Unauthorized' });
             }
@@ -460,7 +442,6 @@ async function run() {
 
         app.get('/subscribedEmail', verifyToken, verifyAdmin, async (req, res) => {
             const result = await subscribedEmail.find().toArray();
-            console.log(result);
             res.send(result);
         })
 
@@ -481,8 +462,6 @@ async function run() {
 
         app.patch('/leads/:id', verifyToken, verifyAdmin, async (req, res) => {
             const data = req.body; // Get the incoming data from the request body
-            console.log(data); // Log the data for debugging
-
             const updatedData = {
                 $set: {
                     leadName: data.leadName,
@@ -511,9 +490,7 @@ async function run() {
                     { _id: new ObjectId(req.params.id) }, // Filter by the lead ID
                     updatedData,
                     { upsert: true } // Create a new document if no matching document is found
-                );
-
-                console.log(result); // Log the result of the update for debugging
+                ); // Log the result of the update for debugging
                 res.status(200).send(result); // Send a success response
             } catch (error) {
                 console.error(error); // Log any errors for debugging
@@ -521,16 +498,19 @@ async function run() {
             }
         });
 
+        app.post('/blogs', verifyToken, verifyAdmin, async (req, res) => {
+            const data = req.body;
+        })
+
         app.post("/create-payment-intent", async (req, res) => {
             const { price } = req.body;
             const customer = await stripe.customers.create();
             // Create a PaymentIntent with the order amount and currency
             const paymentIntent = await stripe.paymentIntents.create({
                 customer: customer.id,
-                setup_future_usage: "off_session",
+                setup_future_usage: "on_session",
                 amount: price * 100,
                 currency: "usd",
-                // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
                 automatic_payment_methods: {
                     enabled: true,
                 },
@@ -538,13 +518,118 @@ async function run() {
 
             res.send({
                 clientSecret: paymentIntent.client_secret,
-                // [DEV]: For demo purposes only, you should avoid exposing the PaymentIntent ID in the client-side code.
-                dpmCheckerLink: `https://dashboard.stripe.com/settings/payment_methods/review?transaction_id=${paymentIntent.id}`,
             });
         });
+        app.post('/webhook', express.raw({ type: 'application/json' }), (request, response) => {
+            let event = request.body;
+            // Only verify the event if you have an endpoint secret defined.
+            // Otherwise use the basic event deserialized with JSON.parse
+            if (endpointSecret) {
+                // Get the signature sent by Stripe
+                const signature = request.headers['stripe-signature'];
+                try {
+                    event = stripe.webhooks.constructEvent(
+                        request.body,
+                        signature,
+                        endpointSecret
+                    );
+                } catch (err) {
+                    console.log(`⚠️  Webhook signature verification failed.`, err.message);
+                    return response.sendStatus(400);
+                }
+            }
 
+            // Handle the event
+            switch (event.type) {
+                // Refund initiated or completed
+                case 'charge.refunded':
+                    const refund = event.data.object;
+                    console.log(`Refund initiated: ${refund.id}`);
 
+                    // Extract refund details
+                    const refundData = {
+                        refundId: refund.id,
+                        refundAmount: refund.amount / 100, // Convert to dollars if needed
+                        refundCurrency: refund.currency,
+                        refundDate: new Date(refund.created * 1000), // Convert Unix timestamp to JS Date
+                        refundStatus: refund.status,
+                        chargeId: refund.charge
+                    };
 
+                    // Store the refund data in your database
+                    // saveRefundData(refundData);
+                    console.log(`Refund Details:`, refundData);
+                    break;
+
+                // Dispute created
+                case 'charge.dispute.created':
+                    const dispute = event.data.object;
+                    console.log(`Dispute created: ${dispute.id}`);
+
+                    // Extract dispute details
+                    const disputeData = {
+                        disputeId: dispute.id,
+                        disputeAmount: dispute.amount / 100, // Convert to dollars
+                        disputeCurrency: dispute.currency,
+                        disputeReason: dispute.reason,
+                        disputeStatus: dispute.status,
+                        disputedOn: new Date(dispute.created * 1000), // Convert Unix timestamp to JS Date
+                        evidenceDueBy: new Date(dispute.evidence_due_by * 1000), // Convert Unix timestamp to JS Date
+                        chargeId: dispute.charge,
+                        disputeNetworkStatus: dispute.network_status
+                    };
+
+                    // Store the dispute data in your database
+                    // saveDisputeData(disputeData);
+                    console.log(`Dispute Details:`, disputeData);
+                    break;
+
+                // Dispute evidence submitted
+                case 'charge.dispute.updated':
+                    const updatedDispute = event.data.object;
+                    console.log(`Dispute updated: ${updatedDispute.id}`);
+
+                    // Check if evidence was submitted
+                    if (updatedDispute.evidence && updatedDispute.evidence.submitted_at) {
+                        const evidenceSubmittedData = {
+                            disputeId: updatedDispute.id,
+                            evidenceSubmittedAt: new Date(updatedDispute.evidence.submitted_at * 1000) // Convert Unix timestamp to JS Date
+                        };
+
+                        // Store evidence submission details in your database
+                        // saveEvidenceSubmittedData(evidenceSubmittedData);
+                        console.log(`Evidence Submitted Details:`, evidenceSubmittedData);
+                    }
+                    break;
+
+                // Default case for unhandled events
+                default:
+                    console.log(`Unhandled event type: ${event.type}`);
+            }
+
+            // Return a 200 response to acknowledge receipt of the event
+            response.send();
+        });
+
+        app.post('/purchasedData', verifyToken, async (req, res) => {
+            const data = req.body;
+            console.log(data);
+            // const product_Id = data.product_Id;
+            // const query = { _id: new ObjectId(product_Id) };
+            // if (data.status !== 'succeeded') {
+            //     console.log('x');
+            //     return
+            // }
+            // const updatedData = {
+            //     $set: {
+            //         sold: true
+            //     }
+            // }
+            // const updateProduct = await leads.updateOne(query, updatedData, { upsert: true });
+            // const purchasedInfo = await purchased.insertOne(data);
+            // console.log(updateProduct, purchasedInfo)
+            // res.send(purchasedInfo);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
