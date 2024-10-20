@@ -7,8 +7,8 @@ const port = 5000 || process.env.PORT;
 const endpointSecret = 'whsec_...';
 const stripe = require("stripe")('sk_test_51QAGCnDjsDu7deU5ljElPtIAnkxXysNY7y27MUmkh00cWkxS4zJM6MiQKq9aDN8CnoeL8bz2jZG03hGJLjJ1reqS00qisscKcz');
 
-app.use(express.json());
-app.use(cors());
+app.use(cors())
+app.use(express.json())
 
 
 app.get('/', (req, res) => {
