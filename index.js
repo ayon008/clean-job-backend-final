@@ -120,6 +120,7 @@ async function run() {
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
             const userData = await userCollection.findOne({ email: email });
+            console.log(userData)
             const token = jwt.sign({
                 email: email,
                 isAdmin: userData?.isAdmin,
