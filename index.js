@@ -6,6 +6,10 @@ const cors = require('cors');
 const port = 5000 || process.env.PORT;
 const endpointSecret = 'whsec_...';
 const stripe = require("stripe")('sk_test_51QAGCnDjsDu7deU5ljElPtIAnkxXysNY7y27MUmkh00cWkxS4zJM6MiQKq9aDN8CnoeL8bz2jZG03hGJLjJ1reqS00qisscKcz');
+const http = require('http');
+const socketIo = require('socket.io');
+const server = http.createServer(app);
+const io = socketIo(server);
 
 app.use(cors())
 app.use(express.json())
@@ -631,6 +635,34 @@ async function run() {
             // console.log(updateProduct, purchasedInfo)
             // res.send(purchasedInfo);
         })
+
+
+        app.post('/webhook', async (req, res) => {
+            const { created, document } = req.body;
+
+            if (created && document._type === 'blog') {
+                const newBlogTitle = document.title;
+
+                // Send notification to the client-side or store the notification
+                console.log(`New blog post: ${newBlogTitle}`);
+
+                // Logic to notify users, e.g., with WebSockets or save to DB
+                // Example: Save new blog data to notification table in DB
+
+                res.status(200).json({ message: 'New blog post notification handled' });
+            } else {
+                res.status(400).json({ message: 'Not a blog creation event' });
+            }
+        });
+
+        io.on('connection', (socket) => {
+            console.log('A user connected');
+            socket.on('disconnect', () => {
+                console.log('User disconnected');
+            });
+        })
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
