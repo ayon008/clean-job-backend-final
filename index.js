@@ -6,10 +6,15 @@ const cors = require('cors');
 const port = 5000 || process.env.PORT;
 const endpointSecret = 'whsec_...';
 const stripe = require("stripe")('sk_test_51QAGCnDjsDu7deU5ljElPtIAnkxXysNY7y27MUmkh00cWkxS4zJM6MiQKq9aDN8CnoeL8bz2jZG03hGJLjJ1reqS00qisscKcz');
-const http = require('http');
-const socketIo = require('socket.io');
-const server = http.createServer(app);
-const io = socketIo(server);
+const Pusher = require('pusher');
+
+const pusher = new Pusher({
+    appId: "1884464",
+    key: "7a71ab81cc1c36e25c6a",
+    secret: "71a5f37c0eb5fb549531",
+    cluster: "ap2",
+    useTLS: true
+});
 
 app.use(cors())
 app.use(express.json())
@@ -189,7 +194,6 @@ async function run() {
             const result = await emailTemplate.insertOne(data);
             res.send(result);
         })
-
 
         app.delete('/leadList/:id', async (req, res) => {
             const id = req.params.id;
@@ -503,10 +507,6 @@ async function run() {
             }
         });
 
-        app.post('/blogs', verifyToken, verifyAdmin, async (req, res) => {
-            const data = req.body;
-        })
-
         app.post("/create-payment-intent", async (req, res) => {
             const { price } = req.body;
             const customer = await stripe.customers.create();
@@ -619,50 +619,35 @@ async function run() {
         app.post('/purchasedData', verifyToken, async (req, res) => {
             const data = req.body;
             console.log(data);
-            // const product_Id = data.product_Id;
-            // const query = { _id: new ObjectId(product_Id) };
-            // if (data.status !== 'succeeded') {
-            //     console.log('x');
-            //     return
-            // }
-            // const updatedData = {
-            //     $set: {
-            //         sold: true
-            //     }
-            // }
-            // const updateProduct = await leads.updateOne(query, updatedData, { upsert: true });
-            // const purchasedInfo = await purchased.insertOne(data);
-            // console.log(updateProduct, purchasedInfo)
-            // res.send(purchasedInfo);
-        })
-
-
-        app.post('/webhook', async (req, res) => {
-            const { created, document } = req.body;
-
-            if (created && document._type === 'blog') {
-                const newBlogTitle = document.title;
-
-                // Send notification to the client-side or store the notification
-                console.log(`New blog post: ${newBlogTitle}`);
-
-                // Logic to notify users, e.g., with WebSockets or save to DB
-                // Example: Save new blog data to notification table in DB
-
-                res.status(200).json({ message: 'New blog post notification handled' });
-            } else {
-                res.status(400).json({ message: 'Not a blog creation event' });
+            const product_Id = data.product_Id;
+            const query = { _id: new ObjectId(product_Id) };
+            if (data.status !== 'succeeded') {
+                console.log('x');
+                return
             }
-        });
-
-        io.on('connection', (socket) => {
-            console.log('A user connected');
-            socket.on('disconnect', () => {
-                console.log('User disconnected');
-            });
+            const updatedData = {
+                $set: {
+                    sold: true
+                }
+            }
+            const updateProduct = await leads.updateOne(query, updatedData, { upsert: true });
+            const purchasedInfo = await purchased.insertOne(data);
+            console.log(updateProduct, purchasedInfo)
+            res.send(purchasedInfo);
         })
 
+        app.post('/sanityWebhook', (req, res) => {
+            const { title, slug } = req.body; // Adjust these based on the webhook payload
 
+            // Trigger Pusher event
+            pusher.trigger('blog-channel', 'new-blog', {
+                title,
+                slug,
+                publishedAt,
+            });
+
+            res.status(200).send('Webhook received and notification sent');
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
