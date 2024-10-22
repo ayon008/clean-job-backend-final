@@ -640,10 +640,9 @@ async function run() {
             const { title, slug } = req.body; // Adjust these based on the webhook payload
 
             // Trigger Pusher event
-            pusher.trigger('blog-channel', 'new-blog', {
+            pusher.trigger('blog-channel', 'sanityWebhook', {
                 title,
-                slug,
-                publishedAt,
+                slug
             });
 
             res.status(200).send('Webhook received and notification sent');
