@@ -638,7 +638,7 @@ async function run() {
 
         app.post('/sanityWebhook', (req, res) => {
             const { title, slug } = req.body; // Adjust these based on the webhook payload
-
+            console.log(req.body)
             // Trigger Pusher event
             pusher.trigger('blog-channel', 'sanityWebhook', {
                 title,
