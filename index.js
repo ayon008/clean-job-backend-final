@@ -5,7 +5,7 @@ const app = express();
 const cors = require('cors');
 const port = 5000 || process.env.PORT;
 const endpointSecret = 'whsec_...';
-const stripe = require("stripe")('sk_test_51QAGCnDjsDu7deU5ljElPtIAnkxXysNY7y27MUmkh00cWkxS4zJM6MiQKq9aDN8CnoeL8bz2jZG03hGJLjJ1reqS00qisscKcz');
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Pusher = require('pusher');
 
 const pusher = new Pusher({
@@ -637,8 +637,11 @@ async function run() {
         })
 
         app.post('/sanityWebhook', (req, res) => {
-            const { title, slug } = req.body; // Adjust these based on the webhook payload
-            console.log(req.body)
+            const data = req.body; // Adjust these based on the webhook payload
+            const title = data.title;
+            const slug = data.slug.current;
+            console.log(title,slug);
+            
             // Trigger Pusher event
             pusher.trigger('blog-channel', 'sanityWebhook', {
                 title,
