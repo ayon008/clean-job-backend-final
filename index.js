@@ -138,6 +138,11 @@ async function run() {
             res.send({ token })
         })
 
+        app.post('/', async (req, res) => {
+            console.log('Ayon');
+
+        })
+
         app.get('/user/:uid', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const find = await userCollection.findOne({ userId: { $eq: uid } })
@@ -640,8 +645,8 @@ async function run() {
             const data = req.body; // Adjust these based on the webhook payload
             const title = data.title;
             const slug = data.slug.current;
-            console.log(title,slug);
-            
+            console.log(title, slug);
+
             // Trigger Pusher event
             pusher.trigger('blog-channel', 'sanityWebhook', {
                 title,
