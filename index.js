@@ -128,10 +128,12 @@ async function run() {
 
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
+const userName = req.body.userName;
             const userData = await userCollection.findOne({ email: email });
             console.log(userData)
             const token = jwt.sign({
                 email: email,
+userName:userName,
                 isAdmin: userData?.isAdmin,
                 isSeller: userData?.isSeller
             }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
