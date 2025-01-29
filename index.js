@@ -239,17 +239,17 @@ async function run() {
         })
 
 
-        app.get('/search/:leadName', async (req, res) => {
-            const leadName = req.params.leadName;
-            const option = {
-                projection: {
-                    states: 1
-                }
-            }
-            const query = { $and: [{ category: leadName }, { verified: true }] }
-            const result = await leads.find(query, option).toArray();
-            res.send(result)
-        })
+        // app.get('/search/:leadName', async (req, res) => {
+        //     const leadName = req.params.leadName;
+        //     const option = {
+        //         projection: {
+        //             states: 1
+        //         }
+        //     }
+        //     const query = { $and: [{ category: leadName }, { verified: true }] }
+        //     const result = await leads.find(query, option).toArray();
+        //     res.send(result)
+        // })
 
         // app.get('/search/:leadName/:state', async function (req, res) {
         //     const leadName = req.params.leadName;
