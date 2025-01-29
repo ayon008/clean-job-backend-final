@@ -128,12 +128,12 @@ async function run() {
 
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
-const userName = req.body.userName;
+            const userName = req.body.userName;
             const userData = await userCollection.findOne({ email: email });
             console.log(userData)
             const token = jwt.sign({
                 email: email,
-userName:userName,
+                userName: userName,
                 isAdmin: userData?.isAdmin,
                 isSeller: userData?.isSeller
             }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
@@ -251,22 +251,45 @@ userName:userName,
             res.send(result)
         })
 
-        app.get('/search/:leadName/:state', async function (req, res) {
-            const leadName = req.params.leadName;
-            const state = req.params.state;
-            const decodeState = decodeURIComponent(state);
-            const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
-            const result = await leads.find(query).toArray();
-            res.send(result)
-        })
+        // app.get('/search/:leadName/:state', async function (req, res) {
+        //     const leadName = req.params.leadName;
+        //     const state = req.params.state;
+        //     const decodeState = decodeURIComponent(state);
+        //     const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
+        //     const result = await leads.find(query).toArray();
+        //     res.send(result)
+        // })
 
-        app.get('/search/:leadName/:state/:id', async function (req, res) {
-            const leadName = req.params.leadName;
-            const states = req.params.state;
-            const id = req.params.id;
-            const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
-            const data = await leads.findOne(query);
-            res.send(data)
+        // app.get('/search/:leadName/:state/:id', async function (req, res) {
+        //     const leadName = req.params.leadName;
+        //     const states = req.params.state;
+        //     const id = req.params.id;
+        //     const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
+        //     const data = await leads.findOne(query);
+        //     res.send(data)
+        // })
+
+        app.get('/search', async function (req, res) {
+            const leadName = req.query.leadName;
+            const state = req.query.state;
+            const id = req.query.id;
+            const query = {
+                $and: [
+                    { verified: true },
+                    {
+                        $or: [
+                            { category: { $eq: leadName } }, { states: { $eq: state } },
+                            { _id: new ObjectId(id) }
+                        ]
+                    }
+                ]
+            }
+            if (id) {
+                const data = await leads.findOne(query);
+                res.send(data)
+            }
+            const data = await leads.find(query, {}).toArray();
+            res.send(data);
         })
 
         app.get('/email-template/:uid', async (req, res) => {
