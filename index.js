@@ -239,35 +239,35 @@ async function run() {
         })
 
 
-        // app.get('/search/:leadName', async (req, res) => {
-        //     const leadName = req.params.leadName;
-        //     const option = {
-        //         projection: {
-        //             states: 1
-        //         }
-        //     }
-        //     const query = { $and: [{ category: leadName }, { verified: true }] }
-        //     const result = await leads.find(query, option).toArray();
-        //     res.send(result)
-        // })
+        app.get('/search/:leadName', async (req, res) => {
+            const leadName = req.params.leadName;
+            const option = {
+                projection: {
+                    states: 1
+                }
+            }
+            const query = { $and: [{ category: leadName }, { verified: true }] }
+            const result = await leads.find(query, option).toArray();
+            res.send(result)
+        })
 
-        // app.get('/search/:leadName/:state', async function (req, res) {
-        //     const leadName = req.params.leadName;
-        //     const state = req.params.state;
-        //     const decodeState = decodeURIComponent(state);
-        //     const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
-        //     const result = await leads.find(query).toArray();
-        //     res.send(result)
-        // })
+        app.get('/search/:leadName/:state', async function (req, res) {
+            const leadName = req.params.leadName;
+            const state = req.params.state;
+            const decodeState = decodeURIComponent(state);
+            const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
+            const result = await leads.find(query).toArray();
+            res.send(result)
+        })
 
-        // app.get('/search/:leadName/:state/:id', async function (req, res) {
-        //     const leadName = req.params.leadName;
-        //     const states = req.params.state;
-        //     const id = req.params.id;
-        //     const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
-        //     const data = await leads.findOne(query);
-        //     res.send(data)
-        // })
+        app.get('/search/:leadName/:state/:id', async function (req, res) {
+            const leadName = req.params.leadName;
+            const states = req.params.state;
+            const id = req.params.id;
+            const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
+            const data = await leads.findOne(query);
+            res.send(data)
+        })
 
         app.get('/search', async function (req, res) {
             const leadName = req.query.leadName;
@@ -278,8 +278,13 @@ async function run() {
                     { verified: true },
                     {
                         $or: [
-                            { category: { $eq: leadName } }, { states: { $eq: state } },
-                            { _id: new ObjectId(id) }
+                            { category: { $eq: leadName } },
+                            {
+                                $and: [
+                                    { states: { $eq: state } },
+                                    { _id: new ObjectId(id) }
+                                ]
+                            }
                         ]
                     }
                 ]
