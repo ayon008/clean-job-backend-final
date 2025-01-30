@@ -269,33 +269,33 @@ async function run() {
             res.send(data)
         })
 
-        app.get('/search', async function (req, res) {
-            const leadName = req.query.leadName;
-            const state = req.query.state;
-            const id = req.query.id;
-            const query = {
-                $and: [
-                    { verified: true },
-                    {
-                        $or: [
-                            { category: { $eq: leadName } },
-                            {
-                                $and: [
-                                    { states: { $eq: state } },
-                                    { _id: new ObjectId(id) }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-            if (id) {
-                const data = await leads.findOne(query);
-                res.send(data)
-            }
-            const data = await leads.find(query, {}).toArray();
-            res.send(data);
-        })
+        // app.get('/search', async function (req, res) {
+        //     const leadName = req.query.leadName;
+        //     const state = req.query.state;
+        //     const id = req.query.id;
+        //     const query = {
+        //         $and: [
+        //             { verified: true },
+        //             {
+        //                 $or: [
+        //                     { category: { $eq: leadName } },
+        //                     {
+        //                         $and: [
+        //                             { states: { $eq: state } },
+        //                             { _id: new ObjectId(id) }
+        //                         ]
+        //                     }
+        //                 ]
+        //             }
+        //         ]
+        //     }
+        //     if (id) {
+        //         const data = await leads.findOne(query);
+        //         res.send(data)
+        //     }
+        //     const data = await leads.find(query, {}).toArray();
+        //     res.send(data);
+        // })
 
         app.get('/email-template/:uid', async (req, res) => {
             const uid = req.params.uid;
