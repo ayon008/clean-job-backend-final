@@ -47,6 +47,7 @@ const bookmarks = database.collection('bookmarks');
 const contacts = database.collection('contacts');
 const message = database.collection('messages');
 const purchased = database.collection('purchased');
+const premiumUsers = database.collection('premiumUsers');
 
 
 const verifyToken = (req, res, next) => {
@@ -238,37 +239,6 @@ async function run() {
             res.send(result);
         })
 
-
-        // app.get('/search/:leadName', async (req, res) => {
-        //     const leadName = req.params.leadName;
-        //     const option = {
-        //         projection: {
-        //             states: 1
-        //         }
-        //     }
-        //     const query = { $and: [{ category: leadName }, { verified: true }] }
-        //     const result = await leads.find(query, option).toArray();
-        //     res.send(result)
-        // })
-
-        // app.get('/search/:leadName/:state', async function (req, res) {
-        //     const leadName = req.params.leadName;
-        //     const state = req.params.state;
-        //     const decodeState = decodeURIComponent(state);
-        //     const query = { $and: [{ category: leadName }, { states: decodeState }, { verified: true }] }
-        //     const result = await leads.find(query).toArray();
-        //     res.send(result)
-        // })
-
-        // app.get('/search/:leadName/:state/:id', async function (req, res) {
-        //     const leadName = req.params.leadName;
-        //     const states = req.params.state;
-        //     const id = req.params.id;
-        //     const query = { $and: [{ states: { $eq: states } }, { _id: new ObjectId(id) }, { category: { $eq: leadName } }, { verified: true }] }
-        //     const data = await leads.findOne(query);
-        //     res.send(data)
-        // })
-
         app.get('/getLeads', async (req, res) => {
             const leadName = req.query.leadName;
             const id = req.query.id;
@@ -277,7 +247,7 @@ async function run() {
             let query = {};
             if (leadName && states && id) {
                 query = { $and: [{ category: { $eq: leadName } }, { verified: true }, { states: { $eq: states } }, { _id: new ObjectId(id) }] }
-                const result = await leads.findOne(query);                
+                const result = await leads.findOne(query);
                 return res.send(result);
             }
             else if (leadName && states) {
@@ -286,7 +256,7 @@ async function run() {
             else if (leadName) {
                 query = { $and: [{ category: { $eq: leadName } }, { verified: true }] }
             }
-            const result = await leads.find(query).toArray();            
+            const result = await leads.find(query).toArray();
             return res.send(result);
         })
 
