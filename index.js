@@ -4,7 +4,7 @@ var jwt = require('jsonwebtoken');
 const app = express();
 const cors = require('cors');
 const port = 5000 || process.env.PORT;
-const endpointSecret = 'whsec_...';
+const endpointSecret = process.env.stripe_webhook_secret;
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 const Pusher = require('pusher');
 
