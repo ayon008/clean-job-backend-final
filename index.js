@@ -47,6 +47,7 @@ const contacts = database.collection('contacts');
 const message = database.collection('messages');
 const purchased = database.collection('purchased');
 const premiumUsers = database.collection('premiumUsers');
+const appointments = database.collection('appointments');
 
 
 const verifyToken = (req, res, next) => {
@@ -209,6 +210,8 @@ async function run() {
 
         app.get('/user', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
+            console.log(result);
+            
             res.send(result);
         })
 
@@ -222,12 +225,8 @@ async function run() {
                 isAdmin: userData?.isAdmin,
                 isSeller: userData?.isSeller
             }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
+            console.log(token)
             res.send({ token })
-        })
-
-        app.post('/', async (req, res) => {
-            console.log('Ayon');
-
         })
 
         app.get('/user/:uid', verifyToken, async (req, res) => {
@@ -607,146 +606,7 @@ async function run() {
             res.send({
                 clientSecret: paymentIntent.client_secret,
             });
-        });
-
-
-
-
-        // app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (request, response) => {
-        //     let event;
-
-        //     if (endpointSecret) {
-        //         // Get the signature sent by Stripe
-        //         const signature = request.headers['stripe-signature'];
-        //         try {
-        //             event = stripe.webhooks.constructEvent(
-        //                 request.body,
-        //                 signature,
-        //                 endpointSecret
-        //             );
-        //         } catch (err) {
-        //             console.log(`⚠️  Webhook signature verification failed.`, err.message);
-        //             return response.sendStatus(400);
-        //         }
-        //     }
-
-        //     // Handle the event
-        //     switch (event.type) {
-        //         // Refund initiated or completed
-        //         case "checkout.session.completed":
-        //             console.log(event.type);
-        //             const session = await stripe.checkout.sessions.retrieve(
-        //                 event.data.object.id,
-        //                 { expand: ['line_items'] }
-        //             );
-        //             const customerId = session.customer;
-        //             console.log(customerId);
-        //             console.log(session);
-
-        //            
-        //             break;
-        //         case 'charge.refunded':
-        //             const refund = event.data.object;
-        //             console.log(`Refund initiated: ${refund.id}`);
-
-        //             // Extract refund details
-        //             const refundData = {
-        //                 refundId: refund.id,
-        //                 refundAmount: refund.amount / 100, // Convert to dollars if needed
-        //                 refundCurrency: refund.currency,
-        //                 refundDate: new Date(refund.created * 1000), // Convert Unix timestamp to JS Date
-        //                 refundStatus: refund.status,
-        //                 chargeId: refund.charge
-        //             };
-
-        //             // Store the refund data in your database
-        //             // saveRefundData(refundData);
-        //             console.log(`Refund Details:`, refundData);
-        //             break;
-
-        //         // Dispute created
-        //         case 'charge.dispute.created':
-        //             const dispute = event.data.object;
-        //             console.log(`Dispute created: ${dispute.id}`);
-
-        //             // Extract dispute details
-        //             const disputeData = {
-        //                 disputeId: dispute.id,
-        //                 disputeAmount: dispute.amount / 100, // Convert to dollars
-        //                 disputeCurrency: dispute.currency,
-        //                 disputeReason: dispute.reason,
-        //                 disputeStatus: dispute.status,
-        //                 disputedOn: new Date(dispute.created * 1000), // Convert Unix timestamp to JS Date
-        //                 evidenceDueBy: new Date(dispute.evidence_due_by * 1000), // Convert Unix timestamp to JS Date
-        //                 chargeId: dispute.charge,
-        //                 disputeNetworkStatus: dispute.network_status
-        //             };
-
-        //             // Store the dispute data in your database
-        //             // saveDisputeData(disputeData);
-        //             console.log(`Dispute Details:`, disputeData);
-        //             break;
-
-        //         // Dispute evidence submitted
-        //         case 'charge.dispute.updated':
-        //             const updatedDispute = event.data.object;
-        //             console.log(`Dispute updated: ${updatedDispute.id}`);
-
-        //             // Check if evidence was submitted
-        //             if (updatedDispute.evidence && updatedDispute.evidence.submitted_at) {
-        //                 const evidenceSubmittedData = {
-        //                     disputeId: updatedDispute.id,
-        //                     evidenceSubmittedAt: new Date(updatedDispute.evidence.submitted_at * 1000) // Convert Unix timestamp to JS Date
-        //                 };
-
-        //                 // Store evidence submission details in your database
-        //                 // saveEvidenceSubmittedData(evidenceSubmittedData);
-        //                 console.log(`Evidence Submitted Details:`, evidenceSubmittedData);
-        //             }
-        //             break;
-
-        //         // Default case for unhandled events
-        //         default:
-        //             console.log(`Unhandled event type: ${event.type}`);
-        //     }
-
-        //     // Return a 200 response to acknowledge receipt of the event
-        //     response.send();
-        // });
-
-
-        //     let event;
-        //     console.log(event);
-
-        //     // Verify the webhook signature
-        //     try {
-        //         event = stripe.webhooks.constructEvent(
-        //             req.body,
-        //             req.headers['stripe-signature'],
-        //             endpointSecret
-        //         );
-        //     } catch (err) {
-        //         console.error('⚠️  Webhook signature verification failed.', err.message);
-        //         return res.status(400).send(`Webhook Error: ${err.message}`);
-        //     }
-
-        //     // Handle the event
-        //     switch (event.type) {
-        //         case 'checkout.session.completed':
-        //             const session = event.data.object;
-        //             console.log(`Session completed: ${session.id}`);
-        //             break;
-
-        //         default:
-        //             console.log(`Unhandled event type: ${event.type}`);
-        //     }
-
-        //     // Acknowledge receipt of the event
-        //     res.json({ received: true });
-        // });
-
-
-
+        })
 
         app.post('/purchasedData', verifyToken, async (req, res) => {
             const data = req.body;
@@ -781,6 +641,18 @@ async function run() {
 
             res.status(200).send('Webhook received and notification sent');
         });
+
+        app.post('/appointment', async (req, res) => {
+            const data = req.body;
+            const result = await appointments.insertOne(data);
+            res.send(result);
+        })
+
+        app.get('/appointment', verifyToken, verifyAdmin, async (req, res) => {
+            const data = await appointments.find().toArray();
+            console.log(data);
+            res.send(data);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
