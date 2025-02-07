@@ -673,6 +673,26 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/myProducts/:userId', verifyToken, async (req, res) => {
+            const userId = req.params.userId;
+            const products = await purchased.find({ userId: userId }).toArray();
+            const result = await Promise.all(
+                products.map(async (product) => {
+                    const lead = await leads.findOne({ _id: new ObjectId(product.product_Id) }, { projection: { leadName: 1, city: 1 } })
+                    return (
+                        {
+                            leadName: lead.leadName,
+                            city: lead.city,
+                            amount: product.amount,
+                            status: product.status,
+                            time: product.time
+                        }
+                    )
+                })
+            )
+            res.send(result)
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
