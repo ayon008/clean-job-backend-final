@@ -141,7 +141,7 @@ async function run() {
                         { expand: ['line_items'] }
                     );
                     const customerId = session.customer;
-
+                    console.log(customerId)
                     const customerDetails = session.customer_details;
                     if (customerDetails?.email) {
                         const user = await userCollection.findOne({ email: customerDetails.email });
