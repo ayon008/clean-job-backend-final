@@ -141,7 +141,6 @@ async function run() {
                         { expand: ['line_items'] }
                     );
                     const customerId = session.customer;
-                    console.log(customerId);
 
                     const customerDetails = session.customer_details;
                     if (customerDetails?.email) {
@@ -158,7 +157,6 @@ async function run() {
 
                         for (const item of line_items) {
                             const priceId = item.price?.id;
-                            console.log(item);
                             const isSubscription = item?.price?.type === 'recurring';
                             if (isSubscription) {
                                 let endDate = new Date();
@@ -210,8 +208,6 @@ async function run() {
 
         app.get('/user', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
-            console.log(result);
-            
             res.send(result);
         })
 
@@ -225,7 +221,6 @@ async function run() {
                 isAdmin: userData?.isAdmin,
                 isSeller: userData?.isSeller
             }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
-            console.log(token)
             res.send({ token })
         })
 
@@ -408,6 +403,7 @@ async function run() {
 
         app.get('/allLeads', verifyToken, verifyAdmin, async (req, res) => {
             const result = await leads.find().toArray();
+            console.log(result);
             res.send(result);
         })
 
@@ -650,8 +646,31 @@ async function run() {
 
         app.get('/appointment', verifyToken, verifyAdmin, async (req, res) => {
             const data = await appointments.find().toArray();
-            console.log(data);
             res.send(data);
+        })
+
+        app.get('/premiumUsers', verifyToken, verifyAdmin, async (req, res) => {
+            const subscribedUsers = await premiumUsers.find().toArray();
+            const result = await Promise.all(
+                subscribedUsers.map(async (user) => {
+                    const premiumUser = await userCollection.findOne({ userId: user.userId }, {
+                        projection: {
+                            companyName: 1,
+                            email: 1,
+                            plan: 1,
+                            phoneNumber: 1,
+                        }
+                    });
+                    return {
+                        user: premiumUser,
+                        startDate: user.startDate,
+                        endDate: user.endDate,
+                        plan: user.plan,
+                        period: user.period,
+                    }
+                })
+            );
+            res.send(result)
         })
 
         // Send a ping to confirm a successful connection
