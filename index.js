@@ -15,9 +15,23 @@ const pusher = new Pusher({
     cluster: "ap2",
     useTLS: true
 });
-
-app.use(cors())
-
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            const allowedOrigins = [
+                'https://www.janitorialappointment.com',
+                'http://localhost:3000'
+            ];
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+);
 
 app.get('/', (req, res) => {
     res.send('server is running');
