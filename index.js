@@ -335,7 +335,7 @@ async function run() {
             }
             const result = await leads.find(query, {
                 projection: {
-                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, date: 0, sellerId: 0, companyName: 0, uploadDate: 0, verified: 0, sellerPayment: 0
+                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, uploadDate: 0, verified: 0, sellerPayment: 0
                 }
             }).toArray();
             return res.send(result);
