@@ -7,6 +7,7 @@ const port = 5000 || process.env.PORT;
 const endpointSecret = 'whsec_8120741b82c3e284bbebe7b35209c24d9d3e90da1413ea9f7521aa189312fc97';
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 const Pusher = require('pusher');
+const nodemailer = require('nodemailer');
 
 const pusher = new Pusher({
     appId: "1884464",
@@ -110,7 +111,30 @@ const verifySeller = async (req, res, next) => {
     }
 };
 
+async function sendEmail(email, data) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'shariarayon.freelancer@gmail.com', // Replace with your Gmail
+            pass: 'ewpj lsjx pkht blcx',
+        },
+    });
 
+    const mailOptions = {
+        from: 'shariarayon.freelancer@gmail.com',
+        to: 'Shariar Ayon',
+        subject: 'Hello from Janitorial Appointment Admin',
+        text: `A new User has been created.
+        ${data.displayName} and Email: ${data.email}`,
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent: ' + info.response);
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+}
 
 async function run() {
     try {
@@ -201,6 +225,7 @@ async function run() {
 
         app.post('/user', async (req, res) => {
             const data = req.body;
+            await sendEmail();
             const result = await userCollection.insertOne(data);
             res.send(result);
         })
