@@ -225,7 +225,7 @@ async function run() {
 
         app.post('/user', async (req, res) => {
             const data = req.body;
-            await sendEmail();
+            await sendEmail(data?.email, data);
             const result = await userCollection.insertOne(data);
             res.send(result);
         })
