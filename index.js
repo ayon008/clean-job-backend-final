@@ -116,16 +116,16 @@ async function sendEmail(email, data) {
         service: 'gmail',
         auth: {
             user: 'shariarayon.freelancer@gmail.com', // Replace with your Gmail
-            pass: 'ewpj lsjx pkht blcx',
+            pass: 'ifcgyxuptvmqpkty',
         },
     });
 
     const mailOptions = {
         from: 'shariarayon.freelancer@gmail.com',
-        to: 'Shariar Ayon',
+        to: 'shariar.ayon128@gmail.com',
         subject: 'Hello from Janitorial Appointment Admin',
         text: `A new User has been created.
-        ${data.displayName} and Email: ${data.email}`,
+        ${data.companyName} and Email: ${data.email}`,
     };
 
     try {
@@ -360,7 +360,7 @@ async function run() {
             }
             const result = await leads.find(query, {
                 projection: {
-                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, uploadDate: 0, verified: 0, sellerPayment: 0
+                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, date: 0, verified: 0, sellerPayment: 0
                 }
             }).toArray();
             return res.send(result);
