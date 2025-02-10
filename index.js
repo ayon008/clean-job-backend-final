@@ -17,7 +17,14 @@ const pusher = new Pusher({
     useTLS: true
 });
 
-app.use(cors());
+const corsOptions = {
+    origin: 'https://www.janitorialappointment.com',
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true
+};
+
+app.use(cors(corsOptions));
 
 app.get('/', (req, res) => {
     res.send('server is running');
