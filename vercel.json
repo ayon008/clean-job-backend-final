@@ -15,6 +15,13 @@
             "dest": "/index.js"
         },
         {
+            "src": "/create-payment-intent",
+            "methods": [
+                "POST"
+            ],
+            "dest": "/index.js"
+        },
+        {
             "src": "/(.*)",
             "dest": "/"
         },
