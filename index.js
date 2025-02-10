@@ -26,11 +26,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use(express.json())
+
 app.get('/', (req, res) => {
     res.send('server is running');
 })
 
-app.use(express.json())
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
