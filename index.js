@@ -30,6 +30,7 @@ app.get('/', (req, res) => {
     res.send('server is running');
 })
 
+app.use(express.json())
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -227,9 +228,6 @@ async function run() {
             response.send();
         })
 
-
-        app.use(express.json())
-
         app.post('/user', async (req, res) => {
             const data = req.body;
             await sendEmail(data?.email, data);
@@ -365,7 +363,11 @@ async function run() {
             else if (leadName) {
                 query = { $and: [{ category: { $eq: leadName } }, { verified: true }] }
             }
-            const result = await leads.find(query).toArray();
+            const result = await leads.find(query, {
+                projection: {
+                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, date: 0, verified: 0, sellerPayment: 0
+                }
+            }).toArray();
             return res.send(result);
         })
 
