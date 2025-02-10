@@ -619,7 +619,7 @@ async function run() {
             }
         });
 
-        app.post("/create-payment-intent", async (req, res) => {
+        app.post("/create-payment-intent", cors(corsOptions), async (req, res) => {
             const { price } = req.body;
             const customer = await stripe.customers.create();
             // Create a PaymentIntent with the order amount and currency
