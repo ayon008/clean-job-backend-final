@@ -17,21 +17,9 @@ const pusher = new Pusher({
     useTLS: true
 });
 
-const corsOptions = {
-    origin: 'https://www.janitorialappointment.com',
-    methods: 'GET,POST,PUT,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
-    credentials: true
-};
-
-app.use(cors(corsOptions));
-
-app.use(express.json())
-
 app.get('/', (req, res) => {
     res.send('server is running');
 })
-
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -228,6 +216,16 @@ async function run() {
             // Return a 200 response to acknowledge receipt of the event
             response.send();
         })
+
+        const corsOptions = {
+            origin: 'https://www.janitorialappointment.com',
+            methods: 'GET,POST,PUT,DELETE,OPTIONS',
+            allowedHeaders: 'Content-Type, Authorization',
+            credentials: true
+        };
+
+        app.use(cors(corsOptions));
+        app.use(express.json())
 
         app.post('/user', async (req, res) => {
             const data = req.body;
