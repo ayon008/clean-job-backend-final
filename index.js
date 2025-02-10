@@ -19,21 +19,7 @@ const pusher = new Pusher({
 
 
 
-const corsOptions = {
-    origin: 'https://www.janitorialappointment.com', // Only allow this domain
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'https://www.janitorialappointment.com');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-    next();
-});
+app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('server is running');
