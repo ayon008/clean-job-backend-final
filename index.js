@@ -17,6 +17,16 @@ const pusher = new Pusher({
     useTLS: true
 });
 
+
+
+const corsOptions = {
+    origin: 'https://www.janitorialappointment.com', // Only allow this domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+};
+
+app.use(cors(corsOptions));
+
 app.get('/', (req, res) => {
     res.send('server is running');
 })
@@ -217,14 +227,6 @@ async function run() {
             response.send();
         })
 
-        const corsOptions = {
-            origin: 'https://www.janitorialappointment.com',
-            methods: 'GET,POST,PUT,DELETE,OPTIONS',
-            allowedHeaders: 'Content-Type, Authorization',
-            credentials: true
-        };
-
-        app.use(cors(corsOptions));
         app.use(express.json())
 
         app.post('/user', async (req, res) => {
