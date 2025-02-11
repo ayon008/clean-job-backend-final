@@ -346,21 +346,21 @@ async function run() {
             const id = req.query.id;
             const states = req.query.states;
             console.log(leadName, id, states);
-            let query = {};
+            let query = { verified: { $eq: true } };
             if (leadName && states && id) {
-                query = { $and: [{ category: { $eq: leadName } }, { verified: true }, { states: { $eq: states } }, { _id: new ObjectId(id) }] }
+                query = { $and: [{ category: { $eq: leadName } }, { verified: { $eq: true } }, { states: { $eq: states } }, { _id: new ObjectId(id) }] }
                 const result = await leads.findOne(query);
                 return res.send(result);
             }
             else if (leadName && states) {
-                query = { $and: [{ category: { $eq: leadName } }, { verified: true }, { states: { $eq: states } }] }
+                query = { $and: [{ category: { $eq: leadName } }, { verified: { $eq: true } }, { states: { $eq: states } }] }
             }
             else if (leadName) {
-                query = { $and: [{ category: { $eq: leadName } }, { verified: true }] }
+                query = { $and: [{ category: { $eq: leadName } }, { verified: { $eq: true } }] }
             }
             const result = await leads.find(query, {
                 projection: {
-                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, date: 0, verified: 0, sellerPayment: 0
+                    lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, date: 0, sellerPayment: 0
                 }
             }).toArray();
             return res.send(result);
