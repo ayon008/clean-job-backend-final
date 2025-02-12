@@ -363,6 +363,8 @@ async function run() {
                     lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, date: 0, sellerPayment: 0
                 }
             }).toArray();
+            console.log(result);
+            
             return res.send(result);
         })
 
