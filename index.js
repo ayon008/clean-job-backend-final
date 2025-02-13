@@ -8,13 +8,17 @@ const endpointSecret = 'whsec_8120741b82c3e284bbebe7b35209c24d9d3e90da1413ea9f75
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 const Pusher = require('pusher');
 const nodemailer = require('nodemailer');
+app.use(cors());
 
-
-app.use(cors({
-    origin: 'https://www.janitorialappointment.com',
-    methods: 'GET,POST,PUT,DELETE',
-    allowedHeaders: 'Content-Type,Authorization'
-}));
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://www.janitorialappointment.com");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 
 
@@ -228,6 +232,26 @@ async function run() {
         })
 
         app.use(express.json())
+        app.use(express.urlencoded({ extended: true }));
+
+        app.post("/create-payment-intent", async (req, res) => {
+            const { price } = req.body;
+            const customer = await stripe.customers.create();
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                customer: customer.id,
+                setup_future_usage: "on_session",
+                amount: price * 100,
+                currency: "usd",
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        })
 
         app.post('/user', async (req, res) => {
             const data = req.body;
@@ -618,25 +642,6 @@ async function run() {
                 res.status(500).send({ error: 'Failed to update lead. Please try again later.' }); // Send an error response
             }
         });
-
-        app.post("/create-payment-intent", async (req, res) => {
-            const { price } = req.body;
-            const customer = await stripe.customers.create();
-            // Create a PaymentIntent with the order amount and currency
-            const paymentIntent = await stripe.paymentIntents.create({
-                customer: customer.id,
-                setup_future_usage: "on_session",
-                amount: price * 100,
-                currency: "usd",
-                automatic_payment_methods: {
-                    enabled: true,
-                },
-            });
-
-            res.send({
-                clientSecret: paymentIntent.client_secret,
-            });
-        })
 
         app.post('/purchasedData', verifyToken, async (req, res) => {
             const data = req.body;

@@ -17,7 +17,8 @@
         {
             "src": "/create-payment-intent",
             "methods": [
-                "POST"
+                "POST",
+                "OPTIONS"
             ],
             "dest": "/index.js"
         },
