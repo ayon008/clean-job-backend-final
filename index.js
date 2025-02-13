@@ -11,8 +11,11 @@ const nodemailer = require('nodemailer');
 
 
 app.use(cors({
-    origin: 'https://www.janitorialappointment.com'
-}))
+    origin: 'https://www.janitorialappointment.com',
+    methods: 'GET,POST,PUT,DELETE',
+    allowedHeaders: 'Content-Type,Authorization'
+}));
+
 
 
 const pusher = new Pusher({
