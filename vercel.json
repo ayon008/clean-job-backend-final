@@ -2,21 +2,24 @@
     "version": 2,
     "builds": [
         {
-            "src": "index.js",
+            "src": "./index.js",
             "use": "@vercel/node"
         }
     ],
     "routes": [
         {
-            "src": "/create-payment-intent",
+            "src": "/(.*)",
+            "dest": "/"
+        },
+        {
+            "src": "/webhook",
             "methods": [
-                "POST",
-                "OPTIONS"
+                "POST"
             ],
             "dest": "/index.js"
         },
         {
-            "src": "/webhook",
+            "src": "/create-payment-intent",
             "methods": [
                 "POST"
             ],
@@ -31,10 +34,6 @@
                 "DELETE",
                 "OPTIONS"
             ],
-            "dest": "/index.js"
-        },
-        {
-            "src": "/(.*)",
             "dest": "/index.js"
         }
     ]
