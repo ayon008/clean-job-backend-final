@@ -9,6 +9,12 @@ const stripe = require("stripe")(process.env.STRIPE_KEY);
 const Pusher = require('pusher');
 const nodemailer = require('nodemailer');
 
+
+app.use(cors({
+    origin: 'https://www.janitorialappointment.com'
+}))
+
+
 const pusher = new Pusher({
     appId: "1884464",
     key: "7a71ab81cc1c36e25c6a",
@@ -17,9 +23,6 @@ const pusher = new Pusher({
     useTLS: true
 });
 
-
-
-app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('server is running');
@@ -362,7 +365,7 @@ async function run() {
                 projection: {
                     lastName: 0, phoneNumber: 0, additionalDetails: 0, audio: 0, businessName: 0, time: 0, location: 0, firstName: 0, sellerId: 0, companyName: 0, date: 0, sellerPayment: 0
                 }
-            }).toArray();    
+            }).toArray();
             return res.send(result);
         })
 
