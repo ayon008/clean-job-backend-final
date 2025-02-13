@@ -135,7 +135,7 @@ async function sendEmail(email, data) {
 
     const mailOptions = {
         from: 'shariarayon.freelancer@gmail.com',
-        to: 'shariar.ayon128@gmail.com',
+        to: `${email}`,
         subject: 'Hello from Janitorial Appointment Admin',
         text: `A new User has been created.
         ${data.companyName} and Email: ${data.email}`,
