@@ -8,6 +8,8 @@ const endpointSecret = 'whsec_8120741b82c3e284bbebe7b35209c24d9d3e90da1413ea9f75
 const stripe = require("stripe")(process.env.STRIPE_KEY);
 const Pusher = require('pusher');
 const nodemailer = require('nodemailer');
+
+
 app.use(cors());
 
 app.use((req, res, next) => {
@@ -232,26 +234,40 @@ async function run() {
         })
 
         app.use(express.json())
-        app.use(express.urlencoded({ extended: true }));
 
         app.post("/create-payment-intent", async (req, res) => {
-            const { price } = req.body;
-            const customer = await stripe.customers.create();
-            // Create a PaymentIntent with the order amount and currency
-            const paymentIntent = await stripe.paymentIntents.create({
-                customer: customer.id,
-                setup_future_usage: "on_session",
-                amount: price * 100,
-                currency: "usd",
-                automatic_payment_methods: {
-                    enabled: true,
-                },
-            });
+            try {
+                // Get price from the request body
+                const { price } = req.body;
 
-            res.send({
-                clientSecret: paymentIntent.client_secret,
-            });
-        })
+                // Validate if price exists and is a valid number
+                if (!price || isNaN(price) || price <= 0) {
+                    return res.status(400).send({ message: 'Invalid price' });
+                }
+
+                // Create a new customer on Stripe
+                const customer = await stripe.customers.create();
+
+                // Create the PaymentIntent
+                const paymentIntent = await stripe.paymentIntents.create({
+                    customer: customer.id,
+                    setup_future_usage: "on_session", // Optional: Allows saving the payment method for future use
+                    amount: price * 100, // Convert to cents (Stripe expects amounts in cents)
+                    currency: "usd", // Specify your desired currency
+                    automatic_payment_methods: {
+                        enabled: true, // Automatically attempt to pay using available methods
+                    },
+                });
+
+                // Send the client secret back to the frontend to confirm the payment
+                res.send({
+                    clientSecret: paymentIntent.client_secret,
+                });
+            } catch (error) {
+                console.error('Error creating payment intent:', error); // Log error to server console
+                res.status(500).send({ message: 'Internal Server Error', error: error.message }); // Return error response
+            }
+        });
 
         app.post('/user', async (req, res) => {
             const data = req.body;
