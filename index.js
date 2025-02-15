@@ -134,71 +134,81 @@ async function sendEmail(email, data) {
             subject: "Welcome to Janitorial Appointment",
             html: `
             <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Welcome to Janitorial Appointment</title>
-            </head>
-            <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
-                <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Janitorial Appointment</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td align="center">
+                <table width="600px" cellspacing="0" cellpadding="0" border="0"
+                    style="background-color: rgb(221, 226, 221); border-radius: 8px; overflow: hidden; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">
+                    <!-- Header with Logo -->
                     <tr>
-                        <td align="center">
-                            <table width="600px" cellspacing="0" cellpadding="0" border="0" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">
-                                <!-- Header with Logo -->
-                                <tr>
-                                    <td align="center" style="background-color: #008000; padding: 20px;">
-                                        <img src="https://i.ibb.co.com/fdfzFtXc/1904c9e7a4e1664e4e229a2f3c9155941-result-result.webp" alt="Janitorial Appointments" style="max-width: 180px;">
-                                    </td>
-                                </tr>
-    
-                                <!-- Welcome Message -->
-                                <tr>
-                                    <td align="center" style="padding: 20px;">
-                                        <h2 style="color: #333;">Welcome to Janitorial Appointment</h2>
-                                        <p style="color: #555; font-size: 16px;">
-                                            🎉 We’re excited to have you on board.
-                                        </p>
-                                    </td>
-                                </tr>
-    
-                                <!-- Steps & Info -->
-                                <tr>
-                                    <td style="padding: 20px; font-size: 16px; color: #444;">
-                                        <p>Here’s what you can do next:</p>
-                                        <ul>
-                                            <li>✅ Explore our <a href="https://www.janitorialappointment.com/search/exclusive-leads" style="color: #008000;">services</a> and offerings.</li>
-                                            <li>✅ Stay updated with exclusive insights and tips.</li>
-                                            <li>✅ Get the best support from our dedicated team.</li>
-                                        </ul>
-                                        <p>If you have any questions, feel free to reach out at 
-                                            <a href="mailto:contact@janitorialappointment.com" style="color: #008000;">contact@janitorialappointment.com</a>.
-                                        </p>
-                                    </td>
-                                </tr>
-    
-                                <!-- CTA Button -->
-                                <tr>
-                                    <td align="center" style="padding: 20px;">
-                                        <a href="https://www.janitorialappointment.com/search/exclusive-leads" 
-                                           style="background-color: #008000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-size: 16px; display: inline-block;">
-                                           Get Latest Commercial Cleaning Leads
-                                        </a>
-                                    </td>
-                                </tr>
-    
-                                <!-- Footer -->
-                                <tr>
-                                    <td align="center" style="background-color: #f4f4f4; padding: 10px; font-size: 14px; color: #666;">
-                                        <p>&copy; 2024 Janitorial Appointment. All Rights Reserved.</p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td align="center" style="padding: 20px;position: relative;">
+                            <img src="https://i.ibb.co.com/fdfzFtXc/1904c9e7a4e1664e4e229a2f3c9155941-result-result.webp"
+                                alt="Janitorial Appointments" style="width: 100%;">
+                            <img src="https://i.ibb.co.com/vCw1wYCn/Janitorial.png" alt="Janitorial Appointment Logo"
+                                style="position: absolute;top: 10%;left: 4%;width: 150px;" />
+                        </td>
+                    </tr>
+
+                    <!-- Welcome Message -->
+                    <tr>
+                        <td align="center" style="padding: 20px;">
+                            <h2 style="color: #333;">Welcome to Janitorial Appointment</h2>
+                            <p style="color: #555; font-size: 16px;">
+                                🎉 We’re excited to have you on board.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Steps & Info -->
+                    <tr>
+                        <td style="padding: 20px; font-size: 16px; color: #444;">
+                            <p>Here’s what you can do next:</p>
+                            <ul>
+                                <li>✅ Explore our <a href="https://www.janitorialappointment.com/search/exclusive-leads"
+                                        style="color: #008000;">services</a> and offerings.</li>
+                                <li>✅ Stay updated with exclusive insights and tips.</li>
+                                <li>✅ Get the best support from our dedicated team.</li>
+                            </ul>
+                            <p>If you have any questions, feel free to reach out at
+                                <a href="mailto:contact@janitorialappointment.com"
+                                    style="color: #008000;">contact@janitorialappointment.com</a>.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- CTA Button -->
+                    <tr>
+                        <td align="center" style="padding: 20px;">
+                            <a href="https://www.janitorialappointment.com/search/exclusive-leads"
+                                style="background-color: #008000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-size: 16px; display: inline-block;">
+                                Get Latest Commercial Cleaning Leads
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center"
+                            style="background-color: #f4f4f4; padding: 10px; font-size: 14px; color: #666;">
+                            <p>&copy; 2025 Janitorial Appointment. All Rights Reserved.</p>
                         </td>
                     </tr>
                 </table>
-            </body>
-            </html>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
             `,
         });
 
