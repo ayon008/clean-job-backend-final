@@ -126,6 +126,10 @@ const verifySeller = async (req, res, next) => {
 };
 
 
+
+
+// welcome Email
+
 async function sendEmail(email, data) {
     try {
         const response = await resend.emails.send({
@@ -221,6 +225,8 @@ async function sendEmail(email, data) {
 async function run() {
     try {
 
+        // Weebhook
+
         app.post('/webhook', express.raw({ type: 'application/json' }), async (request, response) => {
             const sig = request.headers['stripe-signature'];
             let event;
@@ -246,7 +252,6 @@ async function run() {
                         { expand: ['line_items'] }
                     );
                     const customerId = session.customer;
-                    console.log(customerId)
                     const customerDetails = session.customer_details;
                     if (customerDetails?.email) {
                         const user = await userCollection.findOne({ email: customerDetails.email });
@@ -304,6 +309,9 @@ async function run() {
 
         app.use(express.json())
 
+
+        // Each product payment
+
         app.post("/create-payment-intent", async (req, res) => {
             try {
                 // Get price from the request body
@@ -338,6 +346,8 @@ async function run() {
             }
         });
 
+
+        // Posting user
         app.post('/user', async (req, res) => {
             const data = req.body;
             await sendEmail(data?.email, data);
@@ -345,11 +355,16 @@ async function run() {
             res.send(result);
         })
 
+
+        // Getting all users
         app.get('/user', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
 
+
+
+        // Generating Token
         app.post('/userEmail', async (req, res) => {
             const email = req.body.email;
             const userName = req.body.userName;
@@ -363,6 +378,8 @@ async function run() {
             res.send({ token })
         })
 
+
+        // Get single user (profile)
         app.get('/user/:uid', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const find = await userCollection.findOne({ userId: { $eq: uid } })
@@ -374,6 +391,8 @@ async function run() {
             }
         })
 
+
+        // Updating user profile by user
         app.patch('/user/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const userInfo = req.body;
@@ -408,59 +427,13 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/leadList', async (req, res) => {
-            const data = req.body;
-            const result = await leadList.insertOne(data);
-            res.send(result)
-        })
 
-        app.post('/email-template', async (req, res) => {
-            const data = req.body;
-            const result = await emailTemplate.insertOne(data);
-            res.send(result);
-        })
-
-        app.delete('/leadList/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await leadList.deleteOne(query);
-            res.send(result);
-        })
-
-        app.delete('/email-template/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await emailTemplate.deleteOne(query);
-            res.send(result);
-        })
-
-        app.get('/user', async (req, res) => {
-            const users = await userCollection.find().toArray();
-            res.send(users);
-        })
-
-        app.get('/leadList/:uid', async (req, res) => {
-            const uid = req.params.uid;
-            const query = { uid: { $eq: uid } };
-            const data = await leadList.find(query).toArray();
-            const result = await Promise.all(
-                data.map(async (lead) => {
-                    const emailTemplateId = lead.emailTemplate;
-                    const emailTemplateData = await emailTemplate.findOne({ _id: new ObjectId(emailTemplateId) }, { projection: { _id: 0 } });
-                    return {
-                        ...lead,
-                        emailTemplateData, // Add the fetched email template data to the lead object
-                    };
-                })
-            );
-            res.send(result);
-        })
+        // Getting all leads show in website front end, (ISR only)
 
         app.get('/getLeads', async (req, res) => {
             const leadName = req.query.leadName;
             const id = req.query.id;
             const states = req.query.states;
-            console.log(leadName, id, states);
             let query = { verified: { $eq: true } };
             if (leadName && states && id) {
                 query = { $and: [{ category: { $eq: leadName } }, { verified: { $eq: true } }, { states: { $eq: states } }, { _id: new ObjectId(id) }] }
@@ -482,51 +455,24 @@ async function run() {
         })
 
 
-        app.get('/email-template/:uid', async (req, res) => {
-            const uid = req.params.uid;
-            const query = { uid: { $eq: uid } }
-            const data = await emailTemplate.find(query).toArray();
-            res.send(data)
-        })
 
-        app.get('/email-template/:uid/:id', async (req, res) => {
-            const uid = req.params.uid;
-            const id = req.params.id;
-            const query = { $and: [{ uid: { $eq: uid } }, { _id: new ObjectId(id) }] }
-            const data = await emailTemplate.findOne(query);
-            res.send(data)
-        })
-
-        app.put('/email-template/:id', async function (req, res) {
-            const id = req.params.id;
-            const data = req.body;
-            const query = { _id: new ObjectId(id) };
-            const updatedData = {
-                $set: {
-                    templateName: data.templateName,
-                    subject: data.subject,
-                    body: data.body,
-                    emailSignature: data.emailSignature,
-                    websiteLink: data.websiteLink,
-                    file: data.file,
-                }
-            }
-            const result = await emailTemplate.updateOne(query, updatedData);
-            res.send(result);
-        })
-
+        // Subscriber email for footer
         app.post('/subscribedEmail', async (req, res) => {
             const data = req.body;
             const result = await subscribedEmail.insertOne(data);
             res.send(result);
         })
 
+
+        // Uploading leads by admin
         app.post('/leads', verifyToken, verifyAdmin, async (req, res) => {
             const data = req.body;
             const result = await leads.insertOne(data);
             res.send(result);
         })
 
+
+        // Making a user admin (ADMIN action)
         app.patch('/makeAdmin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const data = req.body.isAdmin;
@@ -535,6 +481,8 @@ async function run() {
             const result = await userCollection.updateOne(query, updatedData, { upsert: true });
             res.send(result);
         })
+
+        //  making a user seller (ADMIN action)
         app.patch('/makeSeller/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const data = req.body.isSeller;
@@ -544,12 +492,19 @@ async function run() {
             res.send(result);
         })
 
+
+        // See all the leads (Admin Action);
         app.get('/allLeads', verifyToken, verifyAdmin, async (req, res) => {
-            const result = await leads.find().toArray();
-            console.log(result);
-            res.send(result);
+            let limit = 10;
+            const currentPage = req.query.currentPage;
+            const skip = limit * (currentPage - 1);     
+            const totalLead = await leads.estimatedDocumentCount();
+            const result = await leads.find().skip(skip).limit(limit).toArray();
+            const page = Math.ceil(totalLead / limit);
+            res.send({ result, page: page,totalLead });
         })
 
+        // Update a lead info (ADMIN action)
         app.patch('/allLeads/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -563,6 +518,9 @@ async function run() {
         })
 
 
+
+        // Change category After uploading (ADMIN ACTION)
+
         app.patch('/category/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -574,6 +532,8 @@ async function run() {
             const result = await leads.updateOne(query, updatedData, { upsert: true });
             res.send(result);
         })
+
+        // Change price after uploading (ADMIN ACTION)
 
         app.patch('/prize/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
@@ -587,18 +547,24 @@ async function run() {
             res.send(result);
         })
 
+
+        // DELETE a Lead (ADMIN ACTION)
+
         app.delete('/lead/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const deleteOne = await leads.deleteOne({ _id: new ObjectId(id) })
             res.send(deleteOne);
         })
 
+
+        // Bookmarks
         app.post('/bookmarks', verifyToken, async (req, res) => {
             const data = req.body;
             const result = await bookmarks.insertOne(data);
             res.send(result);
         })
 
+        // do bookmark by user
         app.get('/bookMarks/:uid/:id', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const id = req.params.id;
@@ -615,6 +581,10 @@ async function run() {
             res.send({ status: false })
         })
 
+
+
+        // Delete a bookmark  by user
+
         app.delete('/bookMarks/:uid/:id', verifyToken, async (req, res) => {
             const uid = req.params.uid;
             const id = req.params.id;
@@ -627,6 +597,8 @@ async function run() {
             res.send(find);
         })
 
+
+        // CART items (added leads to book mark) get
 
         app.get('/savedLeads/:uid', verifyToken, async (req, res) => {
             const email = req.decoded.email;
@@ -684,12 +656,6 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/singleLeads/:id', verifyToken, verifyAdmin, async (req, res) => {
-            const id = req.params.id;
-            const data = await leads.findOne({ _id: new ObjectId(id) });
-            res.send(data);
-        })
-
         app.patch('/leads/:id', verifyToken, verifyAdmin, async (req, res) => {
             const data = req.body; // Get the incoming data from the request body
             const updatedData = {
@@ -730,11 +696,9 @@ async function run() {
 
         app.post('/purchasedData', verifyToken, async (req, res) => {
             const data = req.body;
-            console.log(data);
             const product_Id = data.product_Id;
             const query = { _id: new ObjectId(product_Id) };
             if (data.status !== 'succeeded') {
-                console.log('x');
                 return
             }
             const updatedData = {
