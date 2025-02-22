@@ -13,15 +13,15 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
 
-// app.use((req, res, next) => {
-//     res.header("Access-Control-Allow-Origin", "https://www.janitorialappointment.com");
-//     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-//     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//     if (req.method === "OPTIONS") {
-//         return res.sendStatus(200);
-//     }
-//     next();
-// });
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://www.janitorialappointment.com");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 
 
@@ -52,8 +52,6 @@ const client = new MongoClient(uri, {
 
 const database = client.db('CleanJobs');
 const userCollection = database.collection('users');
-const leadList = database.collection('lead-list');
-const emailTemplate = database.collection('email-template');
 const subscribedEmail = database.collection('subscribe-email');
 const leads = database.collection('leads');
 const bookmarks = database.collection('bookmarks');
