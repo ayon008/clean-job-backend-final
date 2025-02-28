@@ -144,7 +144,7 @@ async function sendEmail(email, data) {
     <title>Welcome to Janitorial Appointment</title>
 </head>
 
-<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
     <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
             <td align="center">
