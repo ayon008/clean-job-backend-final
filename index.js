@@ -220,6 +220,114 @@ async function sendEmail(email, data) {
     }
 }
 
+
+async function sendEmailToUser(email, name = "Customer") {
+    try {
+        const response = await resend.emails.send({
+            from: "contact@janitorialappointment.com",
+            to: email,
+            subject: "Your Appointment with Janitorial Appointment is Confirmed",
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2 style="color: #27205F;">Hello ${name},</h2>
+                    <p>Thank you for booking a janitorial service with us. We’ve received your appointment request and our agent will reach out shortly to confirm the details.</p>
+                    <p>Should you have any questions or need further assistance, feel free to contact us at <a href="mailto:contact@janitorialappointment.com">contact@janitorialappointment.com</a>.</p>
+                    <p>We appreciate your trust in Janitorial Appointment and look forward to serving you.</p>
+                    <br/>
+                    <p>Best regards,</p>
+                    <p><strong>The Janitorial Appointment Team</strong></p>
+                </div>
+            `,
+        });
+
+        console.log("Email sent successfully:", response);
+    } catch (error) {
+        console.error("Error sending email:", error);
+    }
+}
+
+async function notifyAdminOfBooking(customerEmail, customerName = "Customer") {
+    try {
+        const response = await resend.emails.send({
+            from: "contact@janitorialappointment.com",
+            to: "shariar.ayon128@gmail.com", // Replace with actual admin email
+            subject: "New Appointment Booking Received",
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2 style="color: #27205F;">New Appointment Alert</h2>
+                    <p>A new janitorial appointment has been booked. Please find the client details below:</p>
+                    <p><strong>Name:</strong> ${customerName}</p>
+                    <p><strong>Email:</strong> ${customerEmail}</p>
+                    <p>Please reach out to the client as soon as possible to confirm the booking and provide further assistance.</p>
+                    <br/>
+                    <p>Thank you,</p>
+                    <p><strong>Janitorial Appointment System</strong></p>
+                </div>
+            `,
+        });
+
+        console.log("Admin notified successfully:", response);
+    } catch (error) {
+        console.error("Error notifying admin:", error);
+    }
+}
+
+async function notifyAdminOfClientMessage(name = "Client", email, message, subject) {
+    try {
+        const response = await resend.emails.send({
+            from: "contact@janitorialappointment.com",
+            to: "shariar.ayon128@gmail.com", // Replace with your actual admin email
+            subject: `New Message from Website Contact Form,${subject}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2 style="color: #27205F;">New Client Message</h2>
+                    <p>You’ve received a new message from the website contact form.</p>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Message:</strong></p>
+                    <blockquote style="background-color: #f5f5f5; padding: 10px; border-left: 4px solid #27205F;">
+                        ${message}
+                    </blockquote>
+                    <br/>
+                    <p>Please respond to the client as soon as possible.</p>
+                    <p><strong>– Janitorial Appointment System</strong></p>
+                </div>
+            `,
+        });
+
+        console.log("Admin notified of client message:", response);
+    } catch (error) {
+        console.error("Error sending client message notification:", error);
+    }
+}
+
+async function notifyAdminOfNewSignup(name = "New User", email) {
+    try {
+        const response = await resend.emails.send({
+            from: "contact@janitorialappointment.com",
+            to: "shariar.ayon128@gmail.com", // Replace with your actual admin email
+            subject: "New User Signup Notification",
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2 style="color: #27205F;">New User Registered</h2>
+                    <p>A new user has just signed up on the Janitorial Appointment platform.</p>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <br/>
+                    <p>Please review the user details and follow up if necessary.</p>
+                    <p><strong>– Janitorial Appointment System</strong></p>
+                </div>
+            `,
+        });
+
+        console.log("Admin notified of new signup:", response);
+    } catch (error) {
+        console.error("Error notifying admin of new signup:", error);
+    }
+}
+
+
+
 async function run() {
     try {
 
@@ -348,7 +456,9 @@ async function run() {
         // Posting user
         app.post('/user', async (req, res) => {
             const data = req.body;
+            console.log(data);
             await sendEmail(data?.email, data);
+            notifyAdminOfNewSignup(data?.companyName, data?.email)
             const result = await userCollection.insertOne(data);
             res.send(result);
         })
@@ -495,11 +605,11 @@ async function run() {
         app.get('/allLeads', verifyToken, verifyAdmin, async (req, res) => {
             let limit = 10;
             const currentPage = req.query.currentPage;
-            const skip = limit * (currentPage - 1);     
+            const skip = limit * (currentPage - 1);
             const totalLead = await leads.estimatedDocumentCount();
             const result = await leads.find().skip(skip).limit(limit).toArray();
             const page = Math.ceil(totalLead / limit);
-            res.send({ result, page: page,totalLead });
+            res.send({ result, page: page, totalLead });
         })
 
         // Update a lead info (ADMIN action)
@@ -630,7 +740,10 @@ async function run() {
 
         app.post('/message', async (req, res) => {
             const data = req.body
+            const { fullName, email, message: text, subject } = data
+            console.log(fullName, email, text, subject)
             const result = await message.insertOne(data);
+            await notifyAdminOfClientMessage(fullName, email, text, subject)
             res.send(result);
         })
 
@@ -727,11 +840,14 @@ async function run() {
         app.post('/appointment', async (req, res) => {
             const data = req.body;
             const result = await appointments.insertOne(data);
+            await sendEmailToUser(data?.email, data?.companyName);
+            await notifyAdminOfBooking(data?.email, data?.companyName);
             res.send(result);
         })
 
         app.get('/appointment', verifyToken, verifyAdmin, async (req, res) => {
             const data = await appointments.find().toArray();
+            console.log(data)
             res.send(data);
         })
 
