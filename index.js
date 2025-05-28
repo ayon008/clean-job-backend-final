@@ -13,13 +13,24 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
 
+const allowedOrigins = [
+    'https://janitorialappointment.com',
+    'https://www.janitorialappointment.com'
+];
+
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://janitorialappointment.com");
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header("Access-Control-Allow-Origin", origin);
+    }
+
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
     if (req.method === "OPTIONS") {
         return res.sendStatus(200);
     }
+
     next();
 });
 
