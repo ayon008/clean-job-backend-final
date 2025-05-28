@@ -14,7 +14,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 app.use(cors());
 
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://www.janitorialappointment.com");
+    res.header("Access-Control-Allow-Origin", "https://janitorialappointment.com");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     if (req.method === "OPTIONS") {
